@@ -1,5 +1,15 @@
 2Características principales de la WebApp:
 1. Inicio e Interfaz de Usuario:
+sera una single page app y tendra un footer
+tendra una barra de menu, con tres links:
+1- pagina introductoria con el mapa de calor y del lado izquiero
+con un grafico de las estadisticas del dia respecto a los 4 tipos de 
+crimenes: atracos, violacion, homicidios y feminicidios.
+2- pagina donde se tomaran los datos del reportes
+3- pagina donde se veran los informes estadisticos donde el usuario
+puede seleccionar como visualizar la informacion del catalogo de crimenes
+por dia, anio, mes, rango de fecha, tipo de crimen, etc..
+
 o Vista General: Presentación de los diferentes tipos de crímenes (robos, violaciones, homicidios, feminicidios).
 o Mapa Interactivo (Mapa de Calor): Un mapa de calor que muestra las zonas de alto y bajo riesgo, basado en las denuncias. El mapa puede usar colores: verde para zonas tranquilas, amarillo para zonas con riesgo moderado, y rojo para zonas peligrosas.
 o Gráficos Interactivos: Gráficos que muestren estadísticas sobre el crimen, como la cantidad de casos denunciados por tipo de crimen, evolución a lo largo del tiempo, distribución geográfica, etc.
@@ -57,13 +67,16 @@ o Cada crimen tiene una ubicación que puede usarse para mostrar en el mapa de c
 
 Tecnologías para el Desarrollo:
 1. Backend (API):
-o Django (Python): Ambas son buenas opciones. Si te sientes cómodo con Python, Django es una excelente opción, ya que ofrece muchas funcionalidades "out of the box", como autenticación, administración de la base de datos, y administración de formularios.
+o Django (Python)
 * Django podría ser la opción ideal si prefieres un marco de trabajo más estructurado con muchas bibliotecas listas para usar.
 o API: Para una API RESTful, puedes usar Django REST Framework (DRF) 
 2. Base de Datos:
 o PostgreSQL es una excelente elección por su robustez y capacidad de manejar consultas complejas, como las geográficas (utilizando la extensión PostGIS para consultas geoespaciales).
 3. Frontend:
-o React.js: Para la interfaz de usuario, React es ideal para construir aplicaciones interactivas con gráficos y mapas. Si decides usar mapas, puedes integrarlo con Leaflet.js.
+o javascript Para la interfaz de usuario, los mapas usando  Leaflet.js.
 o Visualización de Datos: Utiliza bibliotecas como D3.js, Chart.js o Plotly.js para la visualización interactiva de gráficos.
 4. Mapa de Calor:
 o Leaflet.js Para la visualización del mapa interactivo, donde las zonas de riesgo se marcan según el nivel de criminalidad.
+
+ojo: en la primera etapa haremos el backend.
+en la segunda etapa iremos haciendo el frontend.
