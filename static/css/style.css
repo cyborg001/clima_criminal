@@ -11,7 +11,7 @@ body {
 
 /* Header Styles */
 header {
-    background-color: #d32f2f; /* Darker Red */
+    background-color: #2c3e50; /* Dark Blue */
     color: white;
     padding: 1rem;
     text-align: center;
@@ -25,7 +25,7 @@ header h1 {
 
 /* Navigation Styles */
 nav {
-    background-color: #b71c1c; /* Even Darker Red */
+    background-color: #34495e; /* Lighter Blue */
     padding: 0.5rem 1rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -43,13 +43,13 @@ nav ul li a {
     color: white;
     text-decoration: none;
     font-weight: bold;
-    padding: 10px 15px;
+    padding: 12px 20px; /* Increased padding for bigger buttons */
     border-radius: 4px;
     transition: background-color 0.3s ease;
 }
 
 nav ul li a:hover, nav ul li a.active {
-    background-color: #d32f2f; /* Darker Red */
+    background-color: #2c3e50; /* Dark Blue */
 }
 
 /* Main Content Styles */
@@ -102,7 +102,7 @@ form textarea {
 }
 
 form button {
-    background-color: #d32f2f;
+    background-color: #2c3e50; /* Dark Blue */
     color: white;
     padding: 12px 20px;
     border: none;
@@ -114,7 +114,7 @@ form button {
 }
 
 form button:hover {
-    background-color: #b71c1c;
+    background-color: #34495e; /* Lighter Blue */
 }
 
 /* Leaflet Popup Customization */
@@ -127,5 +127,5 @@ form button:hover {
 }
 
 .leaflet-popup-content b {
-    color: #d32f2f;
+    color: #2c3e50; /* Dark Blue */
 }

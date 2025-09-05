@@ -17,11 +17,7 @@
                 <li><a href="{% url 'reportar' %}" {% if request.resolver_match.url_name == 'reportar' %}class="active"{% endif %}>Reportar Crimen</a></li>
                 <li><a href="{% url 'estadisticas' %}" {% if request.resolver_match.url_name == 'estadisticas' %}class="active"{% endif %}>Informes Estadísticos</a></li>
             </ul>
-            <div class="login-section">
-                <input type="text" placeholder="Usuario">
-                <input type="password" placeholder="Contraseña">
-                <button>Login</button>
-            </div>
+            
         </nav>
     </header>
 
