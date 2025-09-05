@@ -279,32 +279,43 @@ function loadReportFormPage() {
 async function loadStatsPage() {
     mainContent.innerHTML = `
         <h2>Informes Estadísticos</h2>
-        <div class="filters" style="padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
-            <label for="filterCrimeType">Tipo de Crimen:</label>
-            <select id="filterCrimeType">
-                <option value="all">Todos</option>
-                <option value="robo">Robo</option>
-                <option value="violacion">Violación</option>
-                <option value="homicidio">Homicidio</option>
-                <option value="feminicidio">Feminicidio</option>
-            </select>
-
-            <label for="filterTime">Periodo:</label>
-            <select id="filterTime">
-                <option value="all">Todo</option>
-                <option value="today">Hoy</option>
-                <option value="week">Esta Semana</option>
-                <option value="month">Este Mes</option>
-                <option value="year">Este Año</option>
-            </select>
-            
-            <label for="startDate">Desde:</label>
-            <input type="date" id="startDate">
-            <label for="endDate">Hasta:</label>
-            <input type="date" id="endDate">
-
-            <button id="applyFilters">Aplicar Filtros</button>
-            <button id="generateReport">Generar Reporte</button>
+        <div class="filters" style="padding: 10px; background-color: #f5f5f5; border-radius: 5px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+            <div>
+                <label for="filterCrimeType">Tipo de Crimen:</label>
+                <select id="filterCrimeType">
+                    <option value="all">Todos</option>
+                    <option value="robo">Robo</option>
+                    <option value="violacion">Violación</option>
+                    <option value="homicidio">Homicidio</option>
+                    <option value="feminicidio">Feminicidio</option>
+                </select>
+            </div>
+            <div>
+                <label for="filterProvince">Provincia:</label>
+                <select id="filterProvince">
+                    <option value="all">Todas</option>
+                </select>
+            </div>
+            <div>
+                <label for="filterTime">Periodo:</label>
+                <select id="filterTime">
+                    <option value="all">Todo</option>
+                    <option value="today">Hoy</option>
+                    <option value="week">Esta Semana</option>
+                    <option value="month">Este Mes</option>
+                    <option value="year">Este Año</option>
+                </select>
+            </div>
+            <div>
+                <label for="startDate">Desde:</label>
+                <input type="date" id="startDate">
+                <label for="endDate" style="margin-left: 5px;">Hasta:</label>
+                <input type="date" id="endDate">
+            </div>
+            <div>
+                <button id="applyFilters">Aplicar Filtros</button>
+                <button id="generateReport">Generar Reporte General</button>
+            </div>
         </div>
         <div id="choroplethMap" style="height: 500px; width: 100%; margin-top: 15px;"></div>
         <div class="charts" style="display: flex; justify-content: space-around; margin-top: 15px;">
@@ -324,19 +335,68 @@ async function loadStatsPage() {
     let choroplethMap = L.map('choroplethMap').setView([18.7357, -70.1627], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(choroplethMap);
     let geojsonLayer = null;
-    let currentFilteredData = [];
+    
+    let allProvincesGeoJSON = null;
+    let dataWithProvinces = []; // Holds data augmented with province name, pre-province-filter
+    let currentFilteredData = []; // Holds final data after all filters are applied
 
-    const applyFiltersButton = document.getElementById('applyFilters');
-    const generateReportButton = document.getElementById('generateReport');
+    // --- CORRECTED: Function to generate a report with new column order ---
+    function generateReport(data, title) {
+        const printWindow = window.open('', '_blank');
+        let tableRows = data.map(d => `
+            <tr>
+                <td>${d.id}</td>
+                <td>${d.tipo_crimen}</td>
+                <td>${d.descripcion}</td>
+                <td>${new Date(d.fecha).toLocaleString()}</td>
+                <td>${d.latitud}, ${d.longitud}</td>
+                <td>${d.provincia || 'N/A'}</td>
+            </tr>
+        `).join('');
+
+        printWindow.document.write(`
+            <html>
+                <head><title>${title}</title>
+                <style> table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid black; padding: 8px; text-align: left; } </style>
+                </head>
+                <body>
+                    <h1>${title}</h1>
+                    <table>
+                        <thead><tr><th>ID</th><th>Tipo</th><th>Descripción</th><th>Fecha</th><th>Ubicación</th><th>Provincia</th></tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                    <script>window.print(); setTimeout(() => window.close(), 500);</script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    async function populateProvinceFilter() {
+        try {
+            const response = await fetch('/static/data/provincias.geojson');
+            allProvincesGeoJSON = await response.json();
+            const provinceFilter = document.getElementById('filterProvince');
+            const provinceNames = allProvincesGeoJSON.features.map(f => f.properties.shapeName).sort();
+            provinceNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                provinceFilter.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Could not load provinces for filter:", error);
+        }
+    }
 
     async function applyFiltersAndUpdateAll() {
         const crimeType = document.getElementById('filterCrimeType').value;
         const timePeriod = document.getElementById('filterTime').value;
         const startDateVal = document.getElementById('startDate').value;
         const endDateVal = document.getElementById('endDate').value;
+        const selectedProvince = document.getElementById('filterProvince').value;
 
         let queryParams = new URLSearchParams();
-
         if (crimeType !== 'all') queryParams.append('tipo_crimen', crimeType);
 
         if (startDateVal && endDateVal) {
@@ -357,7 +417,27 @@ async function loadStatsPage() {
         try {
             const response = await fetch(`/api/denuncias/?${queryParams.toString()}`);
             if (!response.ok) throw new Error('Failed to fetch data');
-            currentFilteredData = await response.json();
+            let apiData = await response.json();
+
+            apiData.forEach(crime => {
+                const point = turf.point([crime.longitud, crime.latitud]);
+                let found = false;
+                for (const provinceFeature of allProvincesGeoJSON.features) {
+                    if (turf.booleanPointInPolygon(point, provinceFeature)) {
+                        crime.provincia = provinceFeature.properties.shapeName;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) crime.provincia = 'N/A';
+            });
+            dataWithProvinces = apiData;
+
+            if (selectedProvince !== 'all') {
+                currentFilteredData = dataWithProvinces.filter(crime => crime.provincia === selectedProvince);
+            } else {
+                currentFilteredData = dataWithProvinces;
+            }
 
             updateCharts(currentFilteredData);
             updateChoroplethMap(currentFilteredData);
@@ -369,7 +449,6 @@ async function loadStatsPage() {
     }
 
     function updateCharts(data) {
-        // Update Crime Type Chart
         const typeCounts = data.reduce((acc, d) => { acc[d.tipo_crimen] = (acc[d.tipo_crimen] || 0) + 1; return acc; }, {});
         const crimeLabels = {'robo': 'Robo', 'violacion': 'Violación', 'homicidio': 'Homicidio', 'feminicidio': 'Feminicidio'};
         const typeLabels = Object.keys(crimeLabels);
@@ -380,7 +459,6 @@ async function loadStatsPage() {
             data: { labels: typeLabels.map(l => crimeLabels[l]), datasets: [{ data: typeData, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'] }] }
         });
 
-        // Update Crime Trend Chart
         const trendCounts = data.reduce((acc, d) => { const date = d.fecha.split('T')[0]; acc[date] = (acc[date] || 0) + 1; return acc; }, {});
         const sortedDates = Object.keys(trendCounts).sort();
         if (crimeTrendChartInstance) crimeTrendChartInstance.destroy();
@@ -390,92 +468,107 @@ async function loadStatsPage() {
         });
     }
 
-    async function updateChoroplethMap(crimeData) {
-        const response = await fetch('/static/data/provincias.geojson');
-        const provinces = await response.json();
-        console.log(provinces)
+    async function updateChoroplethMap(mapData) {
+        const crimeLabels = {'robo': 'Robo', 'violacion': 'Violación', 'homicidio': 'Homicidio', 'feminicidio': 'Feminicidio'};
         const counts = {};
-        provinces.features.forEach(p => { counts[p.properties.PROVINCIA] = 0; });
 
-        crimeData.forEach(crime => {
-            const point = turf.point([crime.longitud, crime.latitud]);
-            for (const province of provinces.features) {
-                if (turf.booleanPointInPolygon(point, province)) {
-                    counts[province.properties.PROVINCIA]++;
-                    break;
+        allProvincesGeoJSON.features.forEach(p => {
+            counts[p.properties.shapeName] = {};
+        });
+
+        mapData.forEach(crime => {
+            const provinceName = crime.provincia;
+            if (provinceName && provinceName !== 'N/A') {
+                const crimeType = crime.tipo_crimen;
+                if (!counts[provinceName][crimeType]) {
+                    counts[provinceName][crimeType] = 0;
                 }
+                counts[provinceName][crimeType]++;
             }
         });
 
-        const maxCount = Math.max(...Object.values(counts));
+        const totals = {};
+        let maxCount = 0;
+        for (const provinceName in counts) {
+            let total = 0;
+            for (const crimeType in counts[provinceName]) {
+                total += counts[provinceName][crimeType];
+            }
+            totals[provinceName] = total;
+            if (total > maxCount) maxCount = total;
+        }
+
         const getColor = (count) => {
-            if (count === 0) return '#ffffff'; // White for no crimes
+            if (count === 0) return '#FFFFFF';
             const ratio = count / maxCount;
-            if (ratio > 0.75) return '#d73027'; // Red
-            if (ratio > 0.5) return '#fc8d59'; // Orange
-            if (ratio > 0.25) return '#fee08b'; // Yellow
-            return '#91cf60'; // Green
+            const red = Math.round(255 * ratio);
+            const blue = Math.round(255 * (1 - ratio));
+            return `rgb(${red},0,${blue})`;
         };
 
         if (geojsonLayer) choroplethMap.removeLayer(geojsonLayer);
 
-        geojsonLayer = L.geoJson(provinces, {
+        geojsonLayer = L.geoJson(allProvincesGeoJSON, {
             style: (feature) => ({
-                fillColor: getColor(counts[feature.properties.PROVINCIA]),
-                weight: 2,
-                opacity: 1,
-                color: 'white',
-                dashArray: '3',
-                fillOpacity: 0.7
+                fillColor: getColor(totals[feature.properties.shapeName] || 0),
+                weight: 2, opacity: 1, color: 'white', dashArray: '3', fillOpacity: 0.7
             }),
             onEachFeature: (feature, layer) => {
+                const provinceName = feature.properties.shapeName;
+                const provinceCounts = counts[provinceName];
+                const total = totals[provinceName] || 0;
+
+                // Popup logic (on click)
+                let popupContent = `<strong>${provinceName}</strong><br>Total de Casos: ${total}<br><hr style="margin: 5px 0;">`;
+                if (total > 0) {
+                    popupContent += '<div style="display: grid; grid-template-columns: auto auto; grid-gap: 2px 10px;">';
+                    for (const type in provinceCounts) {
+                        popupContent += `<span>${crimeLabels[type] || type}:</span><span style="text-align: right;">${provinceCounts[type]}</span>`;
+                    }
+                    popupContent += '</div>';
+                } else {
+                    popupContent += '<span>No hay casos reportados</span>';
+                }
+                popupContent += `<br><button class="province-report-btn" data-province="${provinceName}">Generar Reporte de Provincia</button>`;
+                layer.bindPopup(popupContent);
+
+                // Tooltip logic (on hover)
+                layer.bindTooltip(provinceName);
+
                 layer.on({
                     mouseover: (e) => {
                         const l = e.target;
                         l.setStyle({ weight: 5, color: '#666', dashArray: '' });
-                        l.bringToFront();
+                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) l.bringToFront();
                     },
                     mouseout: (e) => { geojsonLayer.resetStyle(e.target); },
                     click: (e) => { choroplethMap.fitBounds(e.target.getBounds()); }
                 });
-                layer.bindPopup(`${feature.properties.PROVINCIA}<br>Crímenes: ${counts[feature.properties.PROVINCIA]}`);
             }
         }).addTo(choroplethMap);
     }
 
-    generateReportButton.addEventListener('click', () => {
-        const printWindow = window.open('', '_blank');
-        let tableRows = currentFilteredData.map(d => `
-            <tr>
-                <td>${d.id}</td>
-                <td>${d.tipo_crimen}</td>
-                <td>${d.descripcion}</td>
-                <td>${new Date(d.fecha).toLocaleString()}</td>
-                <td>${d.latitud}, ${d.longitud}</td>
-            </tr>
-        `).join('');
-
-        printWindow.document.write(`
-            <html>
-                <head><title>Reporte de Crímenes</title>
-                <style> table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid black; padding: 8px; text-align: left; } </style>
-                </head>
-                <body>
-                    <h1>Reporte de Crímenes</h1>
-                    <table>
-                        <thead><tr><th>ID</th><th>Tipo</th><th>Descripción</th><th>Fecha</th><th>Ubicación</th></tr></thead>
-                        <tbody>${tableRows}</tbody>
-                    </table>
-                    <script>window.print(); window.close();</script>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
+    // --- Event Listeners ---
+    document.getElementById('applyFilters').addEventListener('click', applyFiltersAndUpdateAll);
+    document.getElementById('generateReport').addEventListener('click', () => {
+        const provinceName = document.getElementById('filterProvince').value;
+        const title = provinceName === 'all' ? 'Reporte General de Crímenes' : `Reporte de Crímenes - ${provinceName}`;
+        generateReport(currentFilteredData, title);
     });
 
-    applyFiltersButton.addEventListener('click', applyFiltersAndUpdateAll);
+    // --- CORRECTED: Delegated event listener for popup buttons ---
+    document.getElementById('choroplethMap').addEventListener('click', (e) => {
+        if (e.target && e.target.matches('.province-report-btn')) {
+            const province = e.target.getAttribute('data-province');
+            if (province) {
+                const provinceData = dataWithProvinces.filter(crime => crime.provincia === province);
+                generateReport(provinceData, `Reporte de Crímenes - ${province}`);
+            }
+        }
+    });
 
-    // Initial load
+    // --- Initial Load ---
+    await populateProvinceFilter();
     applyFiltersAndUpdateAll();
 }
 
@@ -497,7 +590,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadDualMapPage() {
-    alert("Cargando página de mapa dual...");
     mainContent.innerHTML = `
         <h2>Mapa de Criminalidad</h2>
         <div class="filter-bar" style="width: 100%; box-sizing: border-box; padding: 10px; background-color: #f2f2f2; border-bottom: 1px solid #ddd; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
@@ -519,15 +611,11 @@ function loadDualMapPage() {
         </div>
     `;
 
-    const initialCoords = [18.4861, -69.9312];
+    const initialCoords = [18.7357, -70.1627];
     const initialZoom = 8;
 
-    // const heatmap = L.map('heatmap').setView(initialCoords, initialZoom);
-    // const markersmap = L.map('markersmap').setView(initialCoords, initialZoom);
-    const heatmap = L.map('heatmap')
-    const markersmap = L.map('markersmap')
-    heatmap.setView(initialCoords, initialZoom);
-    markersmap.setView(initialCoords, initialZoom);
+    const heatmap = L.map('heatmap').setView(initialCoords, initialZoom);
+    const markersmap = L.map('markersmap').setView(initialCoords, initialZoom);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(heatmap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(markersmap);
 
@@ -537,15 +625,43 @@ function loadDualMapPage() {
     let heatLayer = null;
     const markersLayer = L.layerGroup().addTo(markersmap);
     let currentData = [];
+    let allProvincesGeoJSON = null; // To store province data
+
+    // Fetch provinces once
+    fetch('/static/data/provincias.geojson')
+        .then(response => response.json())
+        .then(data => {
+            allProvincesGeoJSON = data;
+            updateMaps(getApiUrl()); // Initial load
+        })
+        .catch(error => console.error("Could not load province geojson:", error));
 
     const updateMaps = (url) => {
         fetch(url)
             .then(response => response.json())
             .then(data => {
+                if (!allProvincesGeoJSON) {
+                    console.error("Province data not loaded yet.");
+                    return;
+                }
+
+                // Augment data with province
+                data.forEach(crime => {
+                    const point = turf.point([crime.longitud, crime.latitud]);
+                    let found = false;
+                    for (const provinceFeature of allProvincesGeoJSON.features) {
+                        if (turf.booleanPointInPolygon(point, provinceFeature)) {
+                            crime.provincia = provinceFeature.properties.shapeName;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) crime.provincia = 'N/A';
+                });
+
                 currentData = data;
 
                 if (!data || data.length === 0) {
-                    alert('La API no devolvió datos para los filtros seleccionados. Los mapas estarán vacíos.');
                     if (heatLayer) heatmap.removeLayer(heatLayer);
                     markersLayer.clearLayers();
                     return;
@@ -562,6 +678,7 @@ function loadDualMapPage() {
                     if (denuncia.latitud && denuncia.longitud) {
                         const popupContent = `
                             <b>Tipo:</b> ${denuncia.tipo_crimen}<br>
+                            <b>Provincia:</b> ${denuncia.provincia || 'N/A'}<br>
                             <b>Descripción:</b> ${denuncia.descripcion}<br>
                             <b>Fecha:</b> ${new Date(denuncia.fecha).toLocaleString()}<br><br>
                             <button class="print-btn" data-id="${denuncia.id}">Imprimir Detalle</button>
@@ -572,27 +689,30 @@ function loadDualMapPage() {
             })
             .catch(error => {
                 console.error('Error al cargar las denuncias:', error);
-                alert(`No se pudieron cargar los datos para los mapas. Error: ${error.message}`);
             });
     };
 
-    markersmap.on('click', '.print-btn', (e) => {
-        const denunciaId = e.originalEvent.target.getAttribute('data-id');
-        const denuncia = currentData.find(d => d.id == denunciaId);
-        if (denuncia) {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html><head><title>Detalle de Crimen</title></head><body>
-                <h1>Detalle de Crimen</h1>
-                <p><b>ID:</b> ${denuncia.id}</p>
-                <p><b>Tipo:</b> ${denuncia.tipo_crimen}</p>
-                <p><b>Descripción:</b> ${denuncia.descripcion}</p>
-                <p><b>Fecha:</b> ${new Date(denuncia.fecha).toLocaleString()}</p>
-                <p><b>Ubicación:</b> Lat: ${denuncia.latitud}, Lon: ${denuncia.longitud}</p>
-                <script>window.print(); window.close();</script>
-                </body></html>
-            `);
-            printWindow.document.close();
+    // Corrected, delegated event listener for the print button
+    document.getElementById('markersmap').addEventListener('click', (e) => {
+        if (e.target && e.target.matches('.print-btn')) {
+            const denunciaId = e.target.getAttribute('data-id');
+            const denuncia = currentData.find(d => d.id == denunciaId);
+            if (denuncia) {
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html><head><title>Detalle de Crimen</title></head><body>
+                    <h1>Detalle de Crimen</h1>
+                    <p><b>ID:</b> ${denuncia.id}</p>
+                    <p><b>Tipo:</b> ${denuncia.tipo_crimen}</p>
+                    <p><b>Provincia:</b> ${denuncia.provincia || 'N/A'}</p>
+                    <p><b>Descripción:</b> ${denuncia.descripcion}</p>
+                    <p><b>Fecha:</b> ${new Date(denuncia.fecha).toLocaleString()}</p>
+                    <p><b>Ubicación:</b> Lat: ${denuncia.latitud}, Lon: ${denuncia.longitud}</p>
+                    <script>window.print(); setTimeout(() => window.close(), 500);</script>
+                    </body></html>
+                `);
+                printWindow.document.close();
+            }
         }
     });
 
@@ -633,6 +753,4 @@ function loadDualMapPage() {
         if (!startDate || !endDate) { alert('Por favor, seleccione una fecha de inicio y una de fin.'); return; }
         updateMaps(getApiUrl({ fecha__gte: startDate, fecha__lte: endDate }));
     });
-
-    updateMaps(getApiUrl());
 }
