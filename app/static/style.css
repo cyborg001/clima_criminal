@@ -24,6 +24,7 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-main);
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -855,18 +856,31 @@ body {
     cursor: pointer;
   }
 
-  /* Botón Flotante de Reporte en Celulares */
+  /* Botón Flotante de Reporte en Celulares (Elevado para flotar sobre la barra de Android/iOS) */
   .fab-report-btn {
-    bottom: 16px !important;
+    bottom: 38px !important;
+    bottom: calc(34px + env(safe-area-inset-bottom, 0px)) !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
     width: auto !important;
     max-width: 90% !important;
-    padding: 0.65rem 1rem !important;
-    font-size: 0.82rem !important;
+    padding: 0.72rem 1.25rem !important;
+    font-size: 0.85rem !important;
     white-space: nowrap !important;
     justify-content: center !important;
-    z-index: 1000 !important;
+    z-index: 1200 !important;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.7) !important;
+  }
+
+  /* Elevar controles inferiores de Leaflet (capas) para que no queden cortados */
+  .leaflet-bottom {
+    bottom: 32px !important;
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .leaflet-top.leaflet-left {
+    top: 12px !important;
+    left: 12px !important;
   }
 }
 
