@@ -679,16 +679,27 @@
 
       tempClickMarker = L.marker([lat, lon], { icon: tempIcon }).addTo(map);
 
-      const popupContent = `
-        <div style="font-family:'Inter',sans-serif; text-align:center; min-width:170px; padding:3px;">
-          <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-bottom:2px;">📍 Punto Seleccionado</div>
-          <div style="font-size:0.78rem; font-weight:700; color:#0f172a; margin-bottom:8px;">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
-          <button onclick="window.abrirReporteEnPunto(${lat}, ${lon})" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none; padding:7px 12px; border-radius:6px; font-weight:700; font-size:0.78rem; cursor:pointer; width:100%; box-shadow:0 2px 8px rgba(239,68,68,0.4);">
-            📍 Reportar en Este Punto Marcado
-          </button>
-        </div>
+      // Crear contenedor DOM limpio sin inline-eval
+      const popupDiv = document.createElement('div');
+      popupDiv.style.fontFamily = "'Inter', sans-serif";
+      popupDiv.style.textAlign = "center";
+      popupDiv.style.minWidth = "170px";
+      popupDiv.style.padding = "3px";
+
+      popupDiv.innerHTML = `
+        <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-bottom:2px;">📍 Punto Seleccionado</div>
+        <div style="font-size:0.78rem; font-weight:700; color:#0f172a; margin-bottom:8px;">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
+        <button id="btnPopupReportar" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none; padding:7px 12px; border-radius:6px; font-weight:700; font-size:0.78rem; cursor:pointer; width:100%; box-shadow:0 2px 8px rgba(239,68,68,0.4);">
+          📍 Reportar en Este Punto Marcado
+        </button>
       `;
-      tempClickMarker.bindPopup(popupContent).openPopup();
+
+      const btnReportar = popupDiv.querySelector('#btnPopupReportar');
+      btnReportar.addEventListener('click', () => {
+        window.abrirReporteEnPunto(lat, lon);
+      });
+
+      tempClickMarker.bindPopup(popupDiv).openPopup();
     });
 
     // Toggle de Modo de Precisión
