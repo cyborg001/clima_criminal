@@ -89,9 +89,9 @@
   <main class="main-container">
     <div id="map"></div>
 
-    <!-- Botón Flotante en Mapa para Reporte Inmediato -->
-    <button id="btnFabReport" class="fab-report-btn">
-      <span>🚨</span> Reportar Delito Aquí
+    <!-- Botón Flotante en Mapa para Reporte Inmediato en Ubicación GPS -->
+    <button id="btnFabReport" class="fab-report-btn" title="Reportar en tus coordenadas GPS en este instante">
+      <span>🎯</span> Reportar en Mi Ubicación (GPS)
     </button>
 
     <!-- Sidebar de Estadísticas y Reportes Recientes -->
@@ -603,10 +603,36 @@
       }
     });
 
+    // Botón Flotante: Reportar en la Ubicación GPS en Vivo en ese mismo instante
     document.getElementById('btnFabReport').addEventListener('click', () => {
-      reportModal.style.display = 'flex';
-      if (!document.getElementById('coordDisplay').value) {
-        document.getElementById('coordDisplay').value = `${state.selectedCoord.lat.toFixed(5)}, ${state.selectedCoord.lon.toFixed(5)}`;
+      const fabBtn = document.getElementById('btnFabReport');
+      const originalHtml = fabBtn.innerHTML;
+
+      if (navigator.geolocation) {
+        fabBtn.innerHTML = '<span>⏳</span> Obteniendo GPS...';
+
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            fabBtn.innerHTML = originalHtml;
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            state.currentLat = lat;
+            state.currentLon = lon;
+            
+            // Actualizar radar y volar a su ubicación
+            detectUserLocation(true);
+            window.abrirReporteEnPunto(lat, lon);
+          },
+          (err) => {
+            fabBtn.innerHTML = originalHtml;
+            console.warn("GPS no disponible:", err.message);
+            // Fallback con la coordenada que tengamos disponible
+            window.abrirReporteEnPunto(state.currentLat || DEFAULT_LAT, state.currentLon || DEFAULT_LON);
+          },
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      } else {
+        window.abrirReporteEnPunto(state.currentLat || DEFAULT_LAT, state.currentLon || DEFAULT_LON);
       }
     });
 
@@ -658,7 +684,7 @@
           <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-bottom:2px;">📍 Punto Seleccionado</div>
           <div style="font-size:0.78rem; font-weight:700; color:#0f172a; margin-bottom:8px;">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
           <button onclick="window.abrirReporteEnPunto(${lat}, ${lon})" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none; padding:7px 12px; border-radius:6px; font-weight:700; font-size:0.78rem; cursor:pointer; width:100%; box-shadow:0 2px 8px rgba(239,68,68,0.4);">
-            🚨 Reportar Delito Aquí
+            📍 Reportar en Este Punto Marcado
           </button>
         </div>
       `;
