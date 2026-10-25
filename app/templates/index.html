@@ -107,9 +107,12 @@
 
       <!-- Selector de Capas Visuales -->
       <div class="layer-switch-bar">
-        <button class="layer-btn active" id="btnLayerHybrid">Híbrido (Pines + Polígonos)</button>
+        <button class="layer-btn active" id="btnLayerHybrid">Híbrido 🔥+📍</button>
         <button class="layer-btn" id="btnLayerHeat">Solo Calor 🔥</button>
         <button class="layer-btn" id="btnLayerPins">Solo Pines 📍</button>
+      </div>
+      <div id="layerModeDescription" style="font-size:0.72rem; color:#38bdf8; padding: 0.3rem 1rem 0.5rem; border-bottom: 1px solid var(--border-card);">
+        Mostrando manchas de calor térmico + pines individuales.
       </div>
 
       <!-- Feed de Incidentes Filtrados -->
@@ -378,19 +381,29 @@
     // 3. Renderizar Pines y Capa de Calor
     function renderReportes() {
       markersLayer.clearLayers();
-      if (heatLayer) map.removeLayer(heatLayer);
+      if (heatLayer) {
+        map.removeLayer(heatLayer);
+        heatLayer = null;
+      }
 
       const heatPoints = [];
 
       state.reportes.forEach(rep => {
         const info = CRIME_STYLES[rep.tipo_delito] || CRIME_STYLES['Otro'];
         
-        // Puntos para Leaflet Heat
-        // Coordenadas [lat, lon, intensidad]
-        const intensidad = (rep.nivel_gravedad || 5) / 10;
+        // Puntos para Leaflet Heat con intensidad reforzada para que el brillo sea visible
+        // Un delito grave (gravedad 7-9) irradia calor inmediato
+        const gravedad = rep.nivel_gravedad || 6;
+        const intensidad = Math.min(1.0, (gravedad / 7.0));
         heatPoints.push([rep.latitud, rep.longitud, intensidad]);
 
-        // Marcador individual con ícono distintivo
+        // Si es un delito de alta gravedad o sector muy activo, reforzamos el halo térmico
+        if (gravedad >= 8) {
+          heatPoints.push([rep.latitud + 0.0008, rep.longitud + 0.0008, 0.7]);
+          heatPoints.push([rep.latitud - 0.0008, rep.longitud - 0.0008, 0.7]);
+        }
+
+        // Marcador individual con ícono distintivo (SOLO visible si NO estamos en "Solo Calor")
         if (state.displayLayerMode !== 'heat') {
           const iconHtml = `<div class="custom-crime-pin ${info.class}">${info.emoji}</div>`;
           const customIcon = L.divIcon({
@@ -424,19 +437,20 @@
         }
       });
 
-      // Crear Heatmap si está en modo Híbrido o Solo Calor
+      // Crear Heatmap si está en modo Híbrido o Solo Calor (con minOpacity alta para brillo visible)
       if (state.displayLayerMode === 'hybrid' || state.displayLayerMode === 'heat') {
         heatLayer = L.heatLayer(heatPoints, {
-          radius: 35,
-          blur: 25,
+          radius: 55,
+          blur: 24,
+          minOpacity: 0.55,
           maxZoom: 16,
           max: 1.0,
           gradient: {
-            0.2: '#0284c7',
-            0.4: '#10b981',
-            0.6: '#eab308',
-            0.8: '#f97316',
-            1.0: '#ef4444'
+            0.15: '#0284c7',
+            0.35: '#10b981',
+            0.55: '#facc15',
+            0.75: '#f97316',
+            0.95: '#ef4444'
           }
         }).addTo(map);
       }
@@ -657,23 +671,28 @@
     });
 
     // Controles de Capas (Híbrido / Solo Calor / Solo Pines)
+    const layerDesc = document.getElementById('layerModeDescription');
+
     document.getElementById('btnLayerHybrid').addEventListener('click', (e) => {
-      setActiveLayerBtn(e.target);
+      setActiveLayerBtn(e.currentTarget);
       state.displayLayerMode = 'hybrid';
+      if (layerDesc) layerDesc.textContent = "🔥 Modo Híbrido: Manchas térmicas de calor + pines individuales.";
       renderSectores();
       renderReportes();
     });
 
     document.getElementById('btnLayerHeat').addEventListener('click', (e) => {
-      setActiveLayerBtn(e.target);
+      setActiveLayerBtn(e.currentTarget);
       state.displayLayerMode = 'heat';
+      if (layerDesc) layerDesc.textContent = "🔥 Solo Calor: Vista térmica pura (pines individuales ocultos).";
       renderSectores();
       renderReportes();
     });
 
     document.getElementById('btnLayerPins').addEventListener('click', (e) => {
-      setActiveLayerBtn(e.target);
+      setActiveLayerBtn(e.currentTarget);
       state.displayLayerMode = 'pins';
+      if (layerDesc) layerDesc.textContent = "📍 Solo Pines: Vista limpia de puntos exactos (calor térmico apagado).";
       renderSectores();
       renderReportes();
     });
