@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query, HTTPException, Request, Response
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,6 +42,16 @@ def startup_event():
 @app.get("/")
 def index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
+
+@app.get("/sw.js")
+def service_worker():
+    sw_file = os.path.join(STATIC_DIR, "sw.js")
+    return FileResponse(sw_file, media_type="application/javascript")
+
+@app.get("/manifest.json")
+def get_manifest():
+    manifest_file = os.path.join(STATIC_DIR, "manifest.json")
+    return FileResponse(manifest_file, media_type="application/json")
 
 @app.get("/api/sectores")
 def get_sectores():

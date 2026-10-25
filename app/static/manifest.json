@@ -1,0 +1,26 @@
+{
+  "name": "Clima Criminal - Gran Santo Domingo",
+  "short_name": "Clima Criminal",
+  "description": "Mapa térmico de delincuencia, radar de seguridad GPS y denuncias ciudadanas anónimas en Santo Domingo Este y Gran SD.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "navigation", "security"]
+}

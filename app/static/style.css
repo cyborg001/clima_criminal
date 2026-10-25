@@ -196,6 +196,36 @@ body {
   box-shadow: 0 0 12px rgba(250, 204, 21, 0.35);
 }
 
+.btn-install {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: pulse-install 2.2s infinite ease-in-out;
+}
+
+.btn-install:hover {
+  background: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.45);
+}
+
+@keyframes pulse-install {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+  }
+}
+
 /* Floating Action Button for Map Reporting */
 .fab-report-btn {
   position: absolute;
@@ -810,6 +840,21 @@ body {
   .btn-radar-mobile {
     background: rgba(2, 132, 199, 0.25);
     border-color: rgba(56, 189, 248, 0.5);
+  }
+
+  .btn-install-mobile {
+    background: rgba(16, 185, 129, 0.25) !important;
+    border-color: rgba(52, 211, 153, 0.6) !important;
+    animation: pulse-install-mobile 2.2s infinite ease-in-out;
+  }
+
+  @keyframes pulse-install-mobile {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 0 5px rgba(52, 211, 153, 0);
+    }
   }
 
   .btn-report-mobile {

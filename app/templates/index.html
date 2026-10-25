@@ -2,16 +2,27 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Clima Criminal | Gran Santo Domingo & SDE</title>
   
+  <!-- Progressive Web App (PWA) Meta & Icons -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Clima Criminal">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon.png">
+
   <!-- Google Fonts & Leaflet -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
-  <link rel="stylesheet" href="/static/style.css?v=20261025_08">
+  <link rel="stylesheet" href="/static/style.css?v=20261025_09">
 </head>
 <body>
 
@@ -28,6 +39,7 @@
         <button id="btnToggleFilters" class="btn-mobile-action" title="Filtros y Búsqueda">🔍</button>
         <button id="btnToggleSidebar" class="btn-mobile-action" title="Termómetro de Incidentes">📊</button>
         <button id="btnExportPdfMobile" class="btn-mobile-action" title="Descargar PDF">📄</button>
+        <button id="btnInstallMobile" class="btn-mobile-action btn-install-mobile" title="Instalar App en Celular" style="display:none;">📲</button>
         <button id="btnGeoMobile" class="btn-mobile-action btn-radar-mobile" title="Mi Ubicación">🎯</button>
         <button id="btnOpenModalMobile" class="btn-mobile-action btn-report-mobile" title="Reportar Delito">➕</button>
       </div>
@@ -80,6 +92,9 @@
 
       <!-- Botones de Acción Desktop -->
       <div class="action-buttons">
+        <button id="btnInstallApp" class="btn-install" title="Instalar Clima Criminal en tu dispositivo" style="display:none;">
+          <span>📲</span> Instalar App
+        </button>
         <button id="btnGeo" class="btn-radar" title="Detectar mi ubicación en vivo">
           <span>🎯</span> Mi Ubicación
         </button>
@@ -895,6 +910,73 @@
       await loadStats();
       detectUserLocation(true); // Intenta detectar ubicación automáticamente
     })();
+
+    // ==========================================
+    // Progressive Web App (PWA) & Service Worker
+    // ==========================================
+    let deferredInstallPrompt = null;
+    const btnInstallApp = document.getElementById('btnInstallApp');
+    const btnInstallMobile = document.getElementById('btnInstallMobile');
+
+    function showInstallPromotion() {
+      if (btnInstallApp) btnInstallApp.style.display = 'inline-flex';
+      if (btnInstallMobile) btnInstallMobile.style.display = 'inline-flex';
+    }
+
+    function hideInstallPromotion() {
+      if (btnInstallApp) btnInstallApp.style.display = 'none';
+      if (btnInstallMobile) btnInstallMobile.style.display = 'none';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      showInstallPromotion();
+    });
+
+    async function handleInstallClick() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('El usuario aceptó la instalación.');
+        }
+        deferredInstallPrompt = null;
+        hideInstallPromotion();
+      } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          alert('📲 Para instalar Clima Criminal en iPhone / iPad:\n1. Toca el botón Compartir de Safari (icono con flecha arriba).\n2. Elige "Agregar a pantalla de inicio ➕".');
+        } else {
+          alert('📲 Para instalar Clima Criminal:\nAbre el menú del navegador (⋮) y selecciona "Instalar aplicación" o "Agregar a la pantalla principal".');
+        }
+      }
+    }
+
+    if (btnInstallApp) btnInstallApp.addEventListener('click', handleInstallClick);
+    if (btnInstallMobile) btnInstallMobile.addEventListener('click', handleInstallClick);
+
+    // Si es iOS y no está en modo standalone, mostrar el botón para dar las instrucciones
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (!isStandalone && isIOSDevice) {
+      showInstallPromotion();
+    }
+
+    window.addEventListener('appinstalled', () => {
+      hideInstallPromotion();
+      deferredInstallPrompt = null;
+      console.log('Clima Criminal fue instalada con éxito como PWA.');
+    });
+
+    // Registro de Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('ServiceWorker registrado:', reg.scope))
+          .catch((err) => console.warn('Error registrando ServiceWorker:', err));
+      });
+    }
   </script>
 </body>
 </html>
