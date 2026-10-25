@@ -1,0 +1,406 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_los_mina",
+        "nombre": "Los Mina",
+        "municipio": "Santo Domingo Este",
+        "zona": "Norte/Centro",
+        "color_borde": "#ff3b30",
+        "centroide": [18.508, -69.865]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.878, 18.518],
+          [-69.855, 18.519],
+          [-69.852, 18.498],
+          [-69.872, 18.497],
+          [-69.879, 18.505],
+          [-69.878, 18.518]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_ensanche_ozama",
+        "nombre": "Ensanche Ozama",
+        "municipio": "Santo Domingo Este",
+        "zona": "Oeste",
+        "color_borde": "#ff9500",
+        "centroide": [18.490, -69.870]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.877, 18.498],
+          [-69.862, 18.498],
+          [-69.861, 18.482],
+          [-69.878, 18.482],
+          [-69.879, 18.492],
+          [-69.877, 18.498]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_alma_rosa_1",
+        "nombre": "Alma Rosa I",
+        "municipio": "Santo Domingo Este",
+        "zona": "Centro",
+        "color_borde": "#ffcc00",
+        "centroide": [18.487, -69.856]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.862, 18.496],
+          [-69.849, 18.496],
+          [-69.848, 18.480],
+          [-69.861, 18.480],
+          [-69.862, 18.496]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_alma_rosa_2",
+        "nombre": "Alma Rosa II",
+        "municipio": "Santo Domingo Este",
+        "zona": "Centro-Norte",
+        "color_borde": "#ff9500",
+        "centroide": [18.498, -69.847]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.854, 18.508],
+          [-69.840, 18.508],
+          [-69.839, 18.492],
+          [-69.853, 18.492],
+          [-69.854, 18.508]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_villa_duarte",
+        "nombre": "Villa Duarte / Maquiteria",
+        "municipio": "Santo Domingo Este",
+        "zona": "Suroeste",
+        "color_borde": "#ff3b30",
+        "centroide": [18.480, -69.877]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.886, 18.488],
+          [-69.872, 18.488],
+          [-69.871, 18.472],
+          [-69.887, 18.473],
+          [-69.886, 18.488]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_los_mameyes",
+        "nombre": "Los Mameyes / Ens. Isabelita",
+        "municipio": "Santo Domingo Este",
+        "zona": "Sur Costera",
+        "color_borde": "#ff9500",
+        "centroide": [18.468, -69.856]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.872, 18.475],
+          [-69.845, 18.475],
+          [-69.845, 18.460],
+          [-69.873, 18.461],
+          [-69.872, 18.475]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_tres_ojos",
+        "nombre": "Los Tres Ojos",
+        "municipio": "Santo Domingo Este",
+        "zona": "Sur",
+        "color_borde": "#34c759",
+        "centroide": [18.479, -69.835]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.845, 18.488],
+          [-69.825, 18.488],
+          [-69.825, 18.470],
+          [-69.845, 18.470],
+          [-69.845, 18.488]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_villa_faro",
+        "nombre": "Villa Faro",
+        "municipio": "Santo Domingo Este",
+        "zona": "Centro-Este",
+        "color_borde": "#ff3b30",
+        "centroide": [18.508, -69.838]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.848, 18.518],
+          [-69.828, 18.518],
+          [-69.827, 18.498],
+          [-69.847, 18.498],
+          [-69.848, 18.518]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_mendoza",
+        "nombre": "Mendoza / Ralma",
+        "municipio": "Santo Domingo Este",
+        "zona": "Este",
+        "color_borde": "#ff9500",
+        "centroide": [18.514, -69.822]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.830, 18.525],
+          [-69.815, 18.525],
+          [-69.814, 18.502],
+          [-69.829, 18.502],
+          [-69.830, 18.525]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_invivienda",
+        "nombre": "Invivienda",
+        "municipio": "Santo Domingo Este",
+        "zona": "Este",
+        "color_borde": "#ff3b30",
+        "centroide": [18.518, -69.805]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.815, 18.528],
+          [-69.795, 18.528],
+          [-69.795, 18.508],
+          [-69.815, 18.508],
+          [-69.815, 18.528]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_hainamosa",
+        "nombre": "Hainamosa / El Tamarindo",
+        "municipio": "Santo Domingo Este",
+        "zona": "Noreste",
+        "color_borde": "#ff9500",
+        "centroide": [18.530, -69.795]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.810, 18.545],
+          [-69.780, 18.545],
+          [-69.780, 18.525],
+          [-69.810, 18.525],
+          [-69.810, 18.545]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_el_almirante",
+        "nombre": "El Almirante",
+        "municipio": "Santo Domingo Este",
+        "zona": "Noreste",
+        "color_borde": "#ff3b30",
+        "centroide": [18.535, -69.782]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.790, 18.548],
+          [-69.770, 18.548],
+          [-69.770, 18.520],
+          [-69.790, 18.520],
+          [-69.790, 18.548]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_cancino",
+        "nombre": "Cancino / Lucerna / Charles",
+        "municipio": "Santo Domingo Este",
+        "zona": "Norte",
+        "color_borde": "#ffcc00",
+        "centroide": [18.525, -69.845]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.855, 18.540],
+          [-69.830, 18.540],
+          [-69.830, 18.515],
+          [-69.855, 18.515],
+          [-69.855, 18.540]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_los_frailes",
+        "nombre": "Los Frailes (I y II)",
+        "municipio": "Santo Domingo Este",
+        "zona": "Sureste Las Americas",
+        "color_borde": "#ff3b30",
+        "centroide": [18.472, -69.798]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.815, 18.485],
+          [-69.780, 18.485],
+          [-69.780, 18.460],
+          [-69.815, 18.460],
+          [-69.815, 18.485]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_brisas_del_este",
+        "nombre": "Brisas del Este",
+        "municipio": "Santo Domingo Este",
+        "zona": "Sureste",
+        "color_borde": "#ff9500",
+        "centroide": [18.485, -69.792]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.815, 18.502],
+          [-69.775, 18.502],
+          [-69.775, 18.485],
+          [-69.815, 18.485],
+          [-69.815, 18.502]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "sde_san_isidro",
+        "nombre": "San Isidro / El Bonito",
+        "municipio": "Santo Domingo Este",
+        "zona": "Extremo Este",
+        "color_borde": "#34c759",
+        "centroide": [18.535, -69.755]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.770, 18.555],
+          [-69.735, 18.555],
+          [-69.735, 18.515],
+          [-69.770, 18.515],
+          [-69.770, 18.555]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dn_ciudad_colonial",
+        "nombre": "Ciudad Colonial / Gazcue",
+        "municipio": "Distrito Nacional",
+        "zona": "Sur",
+        "color_borde": "#34c759",
+        "centroide": [18.472, -69.892]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.905, 18.482],
+          [-69.883, 18.482],
+          [-69.883, 18.465],
+          [-69.905, 18.465],
+          [-69.905, 18.482]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dn_cristo_rey",
+        "nombre": "Cristo Rey / Capotillo",
+        "municipio": "Distrito Nacional",
+        "zona": "Norte",
+        "color_borde": "#ff3b30",
+        "centroide": [18.502, -69.915]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.930, 18.515],
+          [-69.898, 18.515],
+          [-69.898, 18.490],
+          [-69.930, 18.490],
+          [-69.930, 18.515]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "dn_poligono_central",
+        "nombre": "Piantini / Naco / Bella Vista",
+        "municipio": "Distrito Nacional",
+        "zona": "Centro-Oeste",
+        "color_borde": "#34c759",
+        "centroide": [18.475, -69.935]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-69.955, 18.488],
+          [-69.920, 18.488],
+          [-69.920, 18.460],
+          [-69.955, 18.460],
+          [-69.955, 18.488]
+        ]]
+      }
+    }
+  ]
+}

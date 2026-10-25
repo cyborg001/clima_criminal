@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clima Criminal | Gran Santo Domingo & SDE</title>
+  
+  <!-- Google Fonts & Leaflet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- App Header & Filtros Rápidos -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-badge">SDE FOCUS</div>
+      <div>
+        <h1 class="brand-title">Clima Criminal</h1>
+        <p class="brand-subtitle">Mapa Térmico y Reporte Ciudadano Anónimo</p>
+      </div>
+    </div>
+
+    <!-- Barra de Filtros y Búsqueda Libre -->
+    <div class="filters-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar palabras clave (ej: 'cizalla', 'pasola', 'Corolla', 'pistola')...">
+      </div>
+
+      <select id="sectorFilter" class="filter-select">
+        <option value="Todos">📍 Todos los Sectores</option>
+        <option value="Los Mina">Los Mina</option>
+        <option value="Ensanche Ozama">Ensanche Ozama</option>
+        <option value="Alma Rosa I">Alma Rosa I</option>
+        <option value="Alma Rosa II">Alma Rosa II</option>
+        <option value="Villa Duarte / Maquiteria">Villa Duarte</option>
+        <option value="Los Mameyes / Ens. Isabelita">Los Mameyes / Isabelita</option>
+        <option value="Invivienda">Invivienda</option>
+        <option value="Villa Faro">Villa Faro</option>
+        <option value="Mendoza / Ralma">Mendoza / Ralma</option>
+        <option value="Cancino / Lucerna / Charles">Cancino / Charles</option>
+        <option value="Los Frailes (I y II)">Los Frailes</option>
+        <option value="Hainamosa / El Tamarindo">Hainamosa</option>
+        <option value="El Almirante">El Almirante</option>
+        <option value="San Isidro / El Bonito">San Isidro</option>
+        <option value="Ciudad Colonial / Gazcue">Ciudad Colonial (DN)</option>
+        <option value="Cristo Rey / Capotillo">Cristo Rey (DN)</option>
+      </select>
+
+      <select id="delitoFilter" class="filter-select">
+        <option value="Todos">🚨 Todos los Delitos</option>
+        <option value="Atraco a mano armada">🔫 Atraco armado</option>
+        <option value="Despojo en motocicleta">🏍️ Despojo en moto</option>
+        <option value="Robo de vehículo/accesorios">🚗 Robo de vehículo</option>
+        <option value="Robo a vivienda/negocio">🏠 Robo vivienda/negocio</option>
+        <option value="Hurto simple">👜 Hurto simple</option>
+        <option value="Otro">⚠️ Otro / Especial</option>
+      </select>
+
+      <select id="franjaFilter" class="filter-select">
+        <option value="Todas">⏰ Todos los Horarios</option>
+        <option value="Mañana">🌅 Mañana (6am-12pm)</option>
+        <option value="Tarde">☀️ Tarde (12pm-6pm)</option>
+        <option value="Noche">🌙 Noche (6pm-12am)</option>
+        <option value="Madrugada">🦉 Madrugada (12am-6am)</option>
+      </select>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="action-buttons">
+      <button id="btnGeo" class="btn-radar" title="Detectar mi ubicación en vivo">
+        <span>🎯</span> Mi Ubicación
+      </button>
+      <button id="btnOpenModal" class="btn-report">
+        <span>➕</span> Reportar Delito
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal: Mapa y Sidebar -->
+  <main class="main-container">
+    <div id="map"></div>
+
+    <!-- Sidebar de Estadísticas y Reportes Recientes -->
+    <aside class="sidebar" id="sidebarPanel">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">📊 Termómetro de SDE</h2>
+        <span id="activeCountBadge" style="font-size:0.75rem; background:rgba(255,255,255,0.1); padding:0.2rem 0.5rem; border-radius:10px;">0 reportes</span>
+      </div>
+
+      <!-- Métricas Clave -->
+      <div class="stat-pills">
+        <div class="stat-card">
+          <div class="stat-label">Delito + Frecuente</div>
+          <div class="stat-value" id="statTopDelito" style="font-size:0.85rem; color:#f97316;">Cargando...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Horario Crítico</div>
+          <div class="stat-value" id="statHorario" style="font-size:0.85rem; color:#ef4444;">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Selector de Capas Visuales -->
+      <div class="layer-switch-bar">
+        <button class="layer-btn active" id="btnLayerHybrid">Híbrido (Pines + Polígonos)</button>
+        <button class="layer-btn" id="btnLayerHeat">Solo Calor 🔥</button>
+        <button class="layer-btn" id="btnLayerPins">Solo Pines 📍</button>
+      </div>
+
+      <!-- Feed de Incidentes Filtrados -->
+      <div class="feed-container">
+        <div class="feed-header">Incidentes en la Zona</div>
+        <div id="incidentList"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Modal de Reporte Ciudadano Anónimo -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🛡️ Reporte Ciudadano Anónimo</h3>
+        <button class="modal-close" id="btnCloseModal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="privacy-banner">
+          <span>🔒</span>
+          <div><strong>100% Confidencial y Seguro:</strong> No pedimos nombres, teléfono ni cédula. Tu reporte ayuda a salvar vidas.</div>
+        </div>
+
+        <!-- Selector de Precisión de Ubicación -->
+        <div class="form-group">
+          <label class="form-label">¿Cómo deseas indicar la ubicación?</label>
+          <div class="precision-selector">
+            <div class="precision-card active" id="modeExact" data-mode="exacta">
+              <span class="precision-title">🎯 Punto Exacto</span>
+              <span class="precision-desc">Muestra la calle o esquina exacta para alertar a los transeúntes.</span>
+            </div>
+            <div class="precision-card" id="modeProtected" data-mode="protegida">
+              <span class="precision-title">🛡️ Zona Protegida</span>
+              <span class="precision-desc">Desfasa la coordenada (~300m) para proteger tu privacidad ante amenazas.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instrucción de clic en mapa o geolocalización -->
+        <div class="form-group">
+          <label class="form-label">Coordenadas del Hecho</label>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="text" id="coordDisplay" class="form-input" readonly placeholder="Toca en el mapa o usa tu ubicación actual">
+            <button type="button" id="btnUseCurrentModal" class="btn-radar" style="white-space:nowrap;">📍 Aquí</button>
+          </div>
+          <span style="font-size:0.72rem; color:var(--text-muted);">Puedes cerrar este diálogo temporalmente y tocar en el mapa la calle del hecho.</span>
+        </div>
+
+        <!-- Sector y Referencia Pública -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem;">
+          <div class="form-group">
+            <label class="form-label">Sector / Barrio *</label>
+            <select id="modalSector" class="form-input">
+              <option value="Los Mina">Los Mina</option>
+              <option value="Ensanche Ozama">Ensanche Ozama</option>
+              <option value="Alma Rosa I">Alma Rosa I</option>
+              <option value="Alma Rosa II">Alma Rosa II</option>
+              <option value="Villa Duarte / Maquiteria">Villa Duarte / Maquiteria</option>
+              <option value="Los Mameyes / Ens. Isabelita">Los Mameyes / Isabelita</option>
+              <option value="Invivienda">Invivienda</option>
+              <option value="Villa Faro">Villa Faro</option>
+              <option value="Mendoza / Ralma">Mendoza / Ralma</option>
+              <option value="Cancino / Lucerna / Charles">Cancino / Charles</option>
+              <option value="Los Frailes (I y II)">Los Frailes</option>
+              <option value="Hainamosa / El Tamarindo">Hainamosa</option>
+              <option value="El Almirante">El Almirante</option>
+              <option value="San Isidro / El Bonito">San Isidro</option>
+              <option value="Otro Sector Gran SD">Otro Sector Gran SD</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Referencia Pública (Opcional)</label>
+            <input type="text" id="modalRef" class="form-input" placeholder="Ej: Frente a farmacia X, esquina San Vicente">
+          </div>
+        </div>
+
+        <!-- Tipo de Delito -->
+        <div class="form-group">
+          <label class="form-label">Tipo de Delito *</label>
+          <div class="crime-grid" id="crimeChipsContainer">
+            <button type="button" class="crime-chip active" data-type="Atraco a mano armada">🔫 Atraco armado</button>
+            <button type="button" class="crime-chip" data-type="Despojo en motocicleta">🏍️ Despojo en moto</button>
+            <button type="button" class="crime-chip" data-type="Robo de vehículo/accesorios">🚗 Robo de vehículo</button>
+            <button type="button" class="crime-chip" data-type="Robo a vivienda/negocio">🏠 Robo vivienda</button>
+            <button type="button" class="crime-chip" data-type="Hurto simple">👜 Hurto / Cartera</button>
+            <button type="button" class="crime-chip" data-type="Otro">⚠️ Otro / Inusual</button>
+          </div>
+        </div>
+
+        <!-- Campo si es Otro -->
+        <div class="form-group" id="groupOtro" style="display:none;">
+          <label class="form-label">Especifica el tipo de delito inusual</label>
+          <input type="text" id="modalTipoCustom" class="form-input" placeholder="Ej: Robo de retrovisores de pasola, cizallazo a candado...">
+        </div>
+
+        <!-- Descripción libre (Permite búsqueda posterior) -->
+        <div class="form-group">
+          <label class="form-label">Descripción del Hecho (Permitirá búsquedas libres por palabras clave)</label>
+          <textarea id="modalDesc" class="form-textarea" placeholder="Describe brevemente lo ocurrido. Evita nombres o datos que te identifiquen personalmente. Ej: 'Dos jóvenes en pasola blanca arrebataron el bolso...'"></textarea>
+        </div>
+
+        <!-- Franja Horaria -->
+        <div class="form-group">
+          <label class="form-label">Momento del Día *</label>
+          <div class="time-grid" id="timeChipsContainer">
+            <button type="button" class="time-chip" data-time="Mañana">🌅 Mañana</button>
+            <button type="button" class="time-chip" data-time="Tarde">☀️ Tarde</button>
+            <button type="button" class="time-chip active" data-time="Noche">🌙 Noche</button>
+            <button type="button" class="time-chip" data-time="Madrugada">🦉 Madrugada</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btnCancelModal">Cancelar</button>
+        <button type="button" class="btn-primary" id="btnSubmitReport">Publicar Reporte Anónimo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Leaflet, Leaflet Heat y App Logic -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+  <script>
+    // Configuración Inicial del Mapa - Centrado en Santo Domingo Este
+    const DEFAULT_LAT = 18.4980;
+    const DEFAULT_LON = -69.8480;
+    const DEFAULT_ZOOM = 13;
+
+    const map = L.map('map', {
+      zoomControl: false
+    }).setView([DEFAULT_LAT, DEFAULT_LON], DEFAULT_ZOOM);
+
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+    // Tiles oscuros profesionales (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Grupos de capas
+    let geojsonLayer = null;
+    let markersLayer = L.layerGroup().addTo(map);
+    let heatLayer = null;
+    let userMarker = null;
+
+    // Estado global de la app
+    let state = {
+      sectoresGeoJSON: null,
+      reportes: [],
+      currentLat: DEFAULT_LAT,
+      currentLon: DEFAULT_LON,
+      selectedCoord: { lat: DEFAULT_LAT, lon: DEFAULT_LON },
+      currentMode: 'exacta',
+      selectedCrime: 'Atraco a mano armada',
+      selectedTime: 'Noche',
+      displayLayerMode: 'hybrid' // hybrid, heat, pins
+    };
+
+    // Diccionario de íconos y clases de delitos
+    const CRIME_STYLES = {
+      'Atraco a mano armada': { emoji: '🔫', class: 'pin-atraco', color: '#ef4444' },
+      'Despojo en motocicleta': { emoji: '🏍️', class: 'pin-moto', color: '#f97316' },
+      'Robo de vehículo/accesorios': { emoji: '🚗', class: 'pin-vehiculo', color: '#8b5cf6' },
+      'Robo a vivienda/negocio': { emoji: '🏠', class: 'pin-vivienda', color: '#ec4899' },
+      'Hurto simple': { emoji: '👜', class: 'pin-hurto', color: '#eab308' },
+      'Otro': { emoji: '⚠️', class: 'pin-otro', color: '#06b6d4' }
+    };
+
+    // 1. Cargar Polígonos de Sectores
+    async function loadSectores() {
+      try {
+        const res = await fetch('/api/sectores');
+        state.sectoresGeoJSON = await res.json();
+        renderSectores();
+      } catch (err) {
+        console.error('Error cargando sectores:', err);
+      }
+    }
+
+    function renderSectores() {
+      if (geojsonLayer) {
+        map.removeLayer(geojsonLayer);
+      }
+
+      geojsonLayer = L.geoJSON(state.sectoresGeoJSON, {
+        style: function (feature) {
+          const props = feature.properties;
+          return {
+            color: props.color_riesgo || '#38bdf8',
+            weight: 2,
+            opacity: 0.85,
+            fillColor: props.color_riesgo || '#38bdf8',
+            fillOpacity: state.displayLayerMode === 'heat' ? 0.05 : 0.12,
+            dashArray: '3'
+          };
+        },
+        onEachFeature: function (feature, layer) {
+          const p = feature.properties;
+          
+          // Tooltip al pasar el mouse
+          layer.bindTooltip(`
+            <div style="font-size:0.8rem; font-weight:700; color:#fff;">${p.nombre}</div>
+            <div style="font-size:0.7rem; color:${p.color_riesgo};">Nivel: ${p.nivel_riesgo} | ${p.total_incidentes} reportes</div>
+          `, { sticky: true, className: 'leaflet-tooltip-dark' });
+
+          // Clic en el sector: filtrar y enfocar
+          layer.on('click', function () {
+            document.getElementById('sectorFilter').value = p.nombre;
+            fetchReportes();
+            map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+          });
+        }
+      });
+
+      if (state.displayLayerMode !== 'heat') {
+        geojsonLayer.addTo(map);
+      }
+    }
+
+    // 2. Cargar Reportes con Filtros
+    async function fetchReportes() {
+      const q = document.getElementById('searchInput').value;
+      const sector = document.getElementById('sectorFilter').value;
+      const tipo = document.getElementById('delitoFilter').value;
+      const franja = document.getElementById('franjaFilter').value;
+
+      const params = new URLSearchParams();
+      if (q) params.append('q', q);
+      if (sector) params.append('sector', sector);
+      if (tipo) params.append('tipo_delito', tipo);
+      if (franja) params.append('franja', franja);
+
+      try {
+        const res = await fetch(`/api/reportes?${params.toString()}`);
+        state.reportes = await res.json();
+        renderReportes();
+        updateFeed();
+      } catch (err) {
+        console.error('Error cargando reportes:', err);
+      }
+    }
+
+    // 3. Renderizar Pines y Capa de Calor
+    function renderReportes() {
+      markersLayer.clearLayers();
+      if (heatLayer) map.removeLayer(heatLayer);
+
+      const heatPoints = [];
+
+      state.reportes.forEach(rep => {
+        const info = CRIME_STYLES[rep.tipo_delito] || CRIME_STYLES['Otro'];
+        
+        // Puntos para Leaflet Heat
+        // Coordenadas [lat, lon, intensidad]
+        const intensidad = (rep.nivel_gravedad || 5) / 10;
+        heatPoints.push([rep.latitud, rep.longitud, intensidad]);
+
+        // Marcador individual con ícono distintivo
+        if (state.displayLayerMode !== 'heat') {
+          const iconHtml = `<div class="custom-crime-pin ${info.class}">${info.emoji}</div>`;
+          const customIcon = L.divIcon({
+            html: iconHtml,
+            className: '',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          });
+
+          const marker = L.marker([rep.latitud, rep.longitud], { icon: customIcon });
+          
+          const popupHtml = `
+            <div style="font-family:'Inter',sans-serif; min-width:210px; color:#1e293b;">
+              <div style="font-weight:700; font-size:0.88rem; color:${info.color}; margin-bottom:4px;">
+                ${info.emoji} ${rep.tipo_delito}
+              </div>
+              ${rep.tipo_personalizado ? `<div style="font-size:0.75rem; font-weight:600; color:#0f172a; margin-bottom:4px;">Específico: ${rep.tipo_personalizado}</div>` : ''}
+              <div style="font-size:0.75rem; color:#64748b; margin-bottom:6px;">📍 ${rep.sector} ${rep.referencia_publica ? `(${rep.referencia_publica})` : ''}</div>
+              ${rep.descripcion ? `<div style="font-size:0.75rem; background:#f1f5f9; padding:6px; border-radius:6px; margin-bottom:6px;">"${rep.descripcion}"</div>` : ''}
+              <div style="font-size:0.7rem; color:#94a3b8; display:flex; justify-content:space-between;">
+                <span>⏰ ${rep.franja_horaria}</span>
+                <span>📅 ${rep.fecha_reporte.split(' ')[0]}</span>
+              </div>
+              <div style="font-size:0.65rem; margin-top:4px; color:${rep.modo_ubicacion === 'exacta' ? '#0284c7' : '#9333ea'};">
+                ${rep.modo_ubicacion === 'exacta' ? '🎯 Ubicación exacta verificada' : '🛡️ Ubicación protegida por seguridad'}
+              </div>
+            </div>
+          `;
+          marker.bindPopup(popupHtml);
+          markersLayer.addLayer(marker);
+        }
+      });
+
+      // Crear Heatmap si está en modo Híbrido o Solo Calor
+      if (state.displayLayerMode === 'hybrid' || state.displayLayerMode === 'heat') {
+        heatLayer = L.heatLayer(heatPoints, {
+          radius: 35,
+          blur: 25,
+          maxZoom: 16,
+          max: 1.0,
+          gradient: {
+            0.2: '#0284c7',
+            0.4: '#10b981',
+            0.6: '#eab308',
+            0.8: '#f97316',
+            1.0: '#ef4444'
+          }
+        }).addTo(map);
+      }
+    }
+
+    // 4. Actualizar Feed Lateral
+    function updateFeed() {
+      const container = document.getElementById('incidentList');
+      const badge = document.getElementById('activeCountBadge');
+      badge.textContent = `${state.reportes.length} reportes`;
+
+      if (state.reportes.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:0.78rem; text-align:center; padding:1.5rem 0;">No se encontraron incidentes con los filtros aplicados.</div>';
+        return;
+      }
+
+      container.innerHTML = state.reportes.map(rep => {
+        const info = CRIME_STYLES[rep.tipo_delito] || CRIME_STYLES['Otro'];
+        return `
+          <div class="incident-card" onclick="flyToIncident(${rep.latitud}, ${rep.longitud})">
+            <div class="incident-top">
+              <span class="incident-type" style="color:${info.color};">
+                ${info.emoji} ${rep.tipo_delito}
+              </span>
+              <span class="${rep.modo_ubicacion === 'exacta' ? 'badge-exacta' : 'badge-protegida'}">
+                ${rep.modo_ubicacion === 'exacta' ? '🎯 Exacta' : '🛡️ Protegida'}
+              </span>
+            </div>
+            <div class="incident-sector">${rep.sector} ${rep.referencia_publica ? `• ${rep.referencia_publica}` : ''}</div>
+            ${rep.descripcion ? `<div class="incident-desc">${rep.descripcion}</div>` : ''}
+            <div class="incident-footer">
+              <span>⏰ ${rep.franja_horaria}</span>
+              <span>📅 ${rep.fecha_reporte.split(' ')[0]}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function flyToIncident(lat, lon) {
+      map.flyTo([lat, lon], 16, { duration: 1.2 });
+    }
+
+    // 5. Cargar Estadísticas Generales
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/estadisticas');
+        const stats = await res.json();
+        document.getElementById('statTopDelito').textContent = stats.delito_frecuente || 'N/A';
+        document.getElementById('statHorario').textContent = `${stats.horario_critico || 'N/A'}`;
+      } catch (err) {
+        console.error('Error cargando estadísticas:', err);
+      }
+    }
+
+    // 6. Geolocalización Automática del Usuario ("Radar Inmediato")
+    function detectUserLocation(fly = true) {
+      if (!navigator.geolocation) {
+        alert("Tu navegador no soporta geolocalización.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          state.currentLat = lat;
+          state.currentLon = lon;
+          state.selectedCoord = { lat, lon };
+          document.getElementById('coordDisplay').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+          if (userMarker) map.removeLayer(userMarker);
+
+          const radarHtml = `
+            <div class="user-radar-marker">
+              <div class="user-radar-pulse"></div>
+            </div>
+          `;
+          const radarIcon = L.divIcon({
+            html: radarHtml,
+            className: '',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
+
+          userMarker = L.marker([lat, lon], { icon: radarIcon }).addTo(map);
+          userMarker.bindPopup("<b>📍 Tu Ubicación Actual</b><br>Radar de seguridad activo").openPopup();
+
+          if (fly) {
+            map.flyTo([lat, lon], 15, { duration: 1.5 });
+          }
+        },
+        (error) => {
+          console.warn("Permiso de ubicación denegado o no disponible:", error.message);
+          // Fallback silencioso a Santo Domingo Este
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    // Modal & Click en Mapa para seleccionar coordenadas
+    const reportModal = document.getElementById('reportModal');
+    let isSelectingPoint = false;
+
+    document.getElementById('btnOpenModal').addEventListener('click', () => {
+      reportModal.style.display = 'flex';
+      if (!document.getElementById('coordDisplay').value) {
+        document.getElementById('coordDisplay').value = `${state.selectedCoord.lat.toFixed(5)}, ${state.selectedCoord.lon.toFixed(5)}`;
+      }
+    });
+
+    document.getElementById('btnCloseModal').addEventListener('click', () => {
+      reportModal.style.display = 'none';
+    });
+
+    document.getElementById('btnCancelModal').addEventListener('click', () => {
+      reportModal.style.display = 'none';
+    });
+
+    document.getElementById('btnUseCurrentModal').addEventListener('click', () => {
+      detectUserLocation(false);
+    });
+
+    // Clic en el mapa para fijar punto de reporte
+    map.on('click', (e) => {
+      state.selectedCoord = { lat: e.latlng.lat, lon: e.latlng.lng };
+      document.getElementById('coordDisplay').value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+    });
+
+    // Toggle de Modo de Precisión
+    const modeExact = document.getElementById('modeExact');
+    const modeProtected = document.getElementById('modeProtected');
+
+    modeExact.addEventListener('click', () => {
+      modeExact.classList.add('active');
+      modeProtected.classList.remove('active');
+      state.currentMode = 'exacta';
+    });
+
+    modeProtected.addEventListener('click', () => {
+      modeProtected.classList.add('active');
+      modeExact.classList.remove('active');
+      state.currentMode = 'protegida';
+    });
+
+    // Chips de Delito
+    const crimeChips = document.querySelectorAll('.crime-chip');
+    crimeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        crimeChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.selectedCrime = chip.getAttribute('data-type');
+        
+        // Mostrar campo si es "Otro"
+        const groupOtro = document.getElementById('groupOtro');
+        groupOtro.style.display = (state.selectedCrime === 'Otro') ? 'block' : 'none';
+      });
+    });
+
+    // Chips de Franja Horaria
+    const timeChips = document.querySelectorAll('.time-chip');
+    timeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        timeChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.selectedTime = chip.getAttribute('data-time');
+      });
+    });
+
+    // Enviar Reporte
+    document.getElementById('btnSubmitReport').addEventListener('click', async () => {
+      const sector = document.getElementById('modalSector').value;
+      const ref = document.getElementById('modalRef').value;
+      const desc = document.getElementById('modalDesc').value;
+      const tipoCustom = document.getElementById('modalTipoCustom').value;
+
+      if (!state.selectedCoord.lat || !state.selectedCoord.lon) {
+        alert("Por favor selecciona una ubicación en el mapa.");
+        return;
+      }
+
+      const payload = {
+        tipo_delito: state.selectedCrime,
+        tipo_personalizado: state.selectedCrime === 'Otro' ? tipoCustom : null,
+        descripcion: desc || null,
+        modo_ubicacion: state.currentMode,
+        latitud: state.selectedCoord.lat,
+        longitud: state.selectedCoord.lon,
+        sector: sector,
+        municipio: "Santo Domingo Este",
+        referencia_publica: ref || null,
+        franja_horaria: state.selectedTime
+      };
+
+      try {
+        const res = await fetch('/api/reportes/crear', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          alert('¡Reporte publicado anónimamente con éxito!');
+          reportModal.style.display = 'none';
+          
+          // Limpiar formulario y refrescar
+          document.getElementById('modalDesc').value = '';
+          document.getElementById('modalRef').value = '';
+          document.getElementById('modalTipoCustom').value = '';
+          
+          await loadSectores();
+          await fetchReportes();
+          await loadStats();
+        }
+      } catch (err) {
+        alert('Error enviando el reporte: ' + err.message);
+      }
+    });
+
+    // Controles de Capas (Híbrido / Solo Calor / Solo Pines)
+    document.getElementById('btnLayerHybrid').addEventListener('click', (e) => {
+      setActiveLayerBtn(e.target);
+      state.displayLayerMode = 'hybrid';
+      renderSectores();
+      renderReportes();
+    });
+
+    document.getElementById('btnLayerHeat').addEventListener('click', (e) => {
+      setActiveLayerBtn(e.target);
+      state.displayLayerMode = 'heat';
+      renderSectores();
+      renderReportes();
+    });
+
+    document.getElementById('btnLayerPins').addEventListener('click', (e) => {
+      setActiveLayerBtn(e.target);
+      state.displayLayerMode = 'pins';
+      renderSectores();
+      renderReportes();
+    });
+
+    function setActiveLayerBtn(btn) {
+      document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // Listeners de Filtros en Tiempo Real
+    document.getElementById('searchInput').addEventListener('input', fetchReportes);
+    document.getElementById('sectorFilter').addEventListener('change', fetchReportes);
+    document.getElementById('delitoFilter').addEventListener('change', fetchReportes);
+    document.getElementById('franjaFilter').addEventListener('change', fetchReportes);
+    document.getElementById('btnGeo').addEventListener('click', () => detectUserLocation(true));
+
+    // Arranque de la App
+    (async function init() {
+      await loadSectores();
+      await fetchReportes();
+      await loadStats();
+      detectUserLocation(true); // Intenta detectar ubicación automáticamente
+    })();
+  </script>
+</body>
+</html>
