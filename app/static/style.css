@@ -872,10 +872,27 @@ body {
     box-shadow: 0 8px 24px rgba(239, 68, 68, 0.7) !important;
   }
 
+  /* Ocultar atribuciones en móviles para acabado 100% nativo y limpio */
+  .leaflet-control-attribution {
+    display: none !important;
+  }
+
   /* Elevar controles inferiores de Leaflet (capas) para que no queden cortados */
   .leaflet-bottom {
     bottom: 32px !important;
     bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .leaflet-control-layers {
+    background: rgba(15, 23, 42, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .leaflet-control-layers-toggle {
+    filter: invert(1) brightness(1.5);
   }
 
   .leaflet-top.leaflet-left {
