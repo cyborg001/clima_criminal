@@ -18,15 +18,23 @@
   <!-- App Header & Filtros Rápidos -->
   <header class="app-header">
     <div class="brand-section">
-      <div class="brand-badge">SDE FOCUS</div>
+      <div class="brand-badge">SDE</div>
       <div>
         <h1 class="brand-title">Clima Criminal</h1>
-        <p class="brand-subtitle">Mapa Térmico y Reporte Ciudadano Anónimo</p>
+        <p class="brand-subtitle">Mapa Térmico y Reporte Anónimo</p>
       </div>
     </div>
 
+    <!-- Botones de Control para Móviles (Visibles solo en pantallas pequeñas) -->
+    <div class="mobile-nav-buttons">
+      <button id="btnToggleFilters" class="btn-mobile-nav" title="Filtrar">🔍</button>
+      <button id="btnToggleSidebar" class="btn-mobile-nav" title="Estadísticas y Feed">📊</button>
+      <button id="btnExportPdfMobile" class="btn-mobile-nav" title="Descargar PDF">📄</button>
+      <button id="btnGeoMobile" class="btn-mobile-nav btn-radar-mobile" title="GPS">🎯</button>
+    </div>
+
     <!-- Barra de Filtros y Búsqueda Libre -->
-    <div class="filters-bar">
+    <div class="filters-bar" id="filtersBar">
       <div class="search-box">
         <span class="search-icon">🔍</span>
         <input type="text" id="searchInput" placeholder="Buscar palabras clave (ej: 'cizalla', 'pasola', 'Corolla', 'pistola')...">
@@ -98,7 +106,10 @@
     <aside class="sidebar" id="sidebarPanel">
       <div class="sidebar-header">
         <h2 class="sidebar-title">📊 Termómetro de SDE</h2>
-        <span id="activeCountBadge" style="font-size:0.75rem; background:rgba(255,255,255,0.1); padding:0.2rem 0.5rem; border-radius:10px;">0 reportes</span>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span id="activeCountBadge" style="font-size:0.75rem; background:rgba(255,255,255,0.1); padding:0.2rem 0.5rem; border-radius:10px;">0 reportes</span>
+          <button id="btnCloseSidebar" class="mobile-close-sidebar" title="Cerrar panel">&times;</button>
+        </div>
       </div>
 
       <!-- Métricas Clave -->
@@ -831,6 +842,44 @@
     document.getElementById('delitoFilter').addEventListener('change', fetchReportes);
     document.getElementById('franjaFilter').addEventListener('change', fetchReportes);
     document.getElementById('btnGeo').addEventListener('click', () => detectUserLocation(true));
+
+    // Listeners para Controles Móviles
+    const btnToggleFilters = document.getElementById('btnToggleFilters');
+    const filtersBar = document.getElementById('filtersBar');
+    if (btnToggleFilters && filtersBar) {
+      btnToggleFilters.addEventListener('click', () => {
+        filtersBar.classList.toggle('mobile-open');
+        btnToggleFilters.classList.toggle('active');
+      });
+    }
+
+    const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+    const sidebarPanel = document.getElementById('sidebarPanel');
+    const btnCloseSidebar = document.getElementById('btnCloseSidebar');
+    if (btnToggleSidebar && sidebarPanel) {
+      btnToggleSidebar.addEventListener('click', () => {
+        sidebarPanel.classList.toggle('mobile-open');
+      });
+    }
+    if (btnCloseSidebar && sidebarPanel) {
+      btnCloseSidebar.addEventListener('click', () => {
+        sidebarPanel.classList.remove('mobile-open');
+      });
+    }
+
+    const btnExportPdfMobile = document.getElementById('btnExportPdfMobile');
+    if (btnExportPdfMobile) {
+      btnExportPdfMobile.addEventListener('click', () => {
+        document.getElementById('btnExportPdf').click();
+      });
+    }
+
+    const btnGeoMobile = document.getElementById('btnGeoMobile');
+    if (btnGeoMobile) {
+      btnGeoMobile.addEventListener('click', () => {
+        detectUserLocation(true);
+      });
+    }
 
     // Arranque de la App
     (async function init() {
