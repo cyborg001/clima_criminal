@@ -248,32 +248,37 @@
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
   <script>
-    // Configuración Inicial del Mapa - Centrado en Santo Domingo Este
+    // Configuración Inicial del Mapa - Centrado en Santo Domingo Este con límites de zoom seguros
     const DEFAULT_LAT = 18.4980;
     const DEFAULT_LON = -69.8480;
     const DEFAULT_ZOOM = 13;
 
     const map = L.map('map', {
-      zoomControl: false
+      zoomControl: false,
+      minZoom: 10,
+      maxZoom: 19
     }).setView([DEFAULT_LAT, DEFAULT_LON], DEFAULT_ZOOM);
 
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-    // Capas de Mapa Base sin API Key ni marcas de agua
+    // Capas de Mapa Base sin API Key ni marcas de agua (con maxNativeZoom para evitar cortes de zoom)
     const darkBase = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       attribution: '&copy; Esri, DeLorme, NAVTEQ',
-      maxZoom: 18
+      maxNativeZoom: 16,
+      maxZoom: 19
     });
 
     const darkLabels = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
       attribution: '',
-      maxZoom: 18
+      maxNativeZoom: 16,
+      maxZoom: 19
     });
 
     const darkGroup = L.layerGroup([darkBase, darkLabels]).addTo(map);
 
     const osmBase = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
+      maxNativeZoom: 19,
       maxZoom: 19
     });
 
@@ -563,16 +568,30 @@
     const reportModal = document.getElementById('reportModal');
     let tempClickMarker = null;
 
+    function limpiarPuntoTemporal() {
+      if (tempClickMarker) {
+        map.removeLayer(tempClickMarker);
+        tempClickMarker = null;
+      }
+    }
+
+    // Si el usuario cierra el popup o hace clic afuera sin reportar, se elimina el punto del mapa
+    map.on('popupclose', (e) => {
+      if (tempClickMarker && e.popup === tempClickMarker.getPopup()) {
+        setTimeout(() => {
+          if (reportModal.style.display !== 'flex') {
+            limpiarPuntoTemporal();
+          }
+        }, 150);
+      }
+    });
+
     // Función global para abrir modal con coordenadas específicas desde cualquier popup del mapa
     window.abrirReporteEnPunto = function (lat, lon, sectorSugerido = null) {
       state.selectedCoord = { lat, lon };
       document.getElementById('coordDisplay').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
       if (sectorSugerido) {
         document.getElementById('modalSector').value = sectorSugerido;
-      }
-      if (tempClickMarker) {
-        map.removeLayer(tempClickMarker);
-        tempClickMarker = null;
       }
       reportModal.style.display = 'flex';
     };
@@ -608,10 +627,12 @@
 
     document.getElementById('btnCloseModal').addEventListener('click', () => {
       reportModal.style.display = 'none';
+      limpiarPuntoTemporal();
     });
 
     document.getElementById('btnCancelModal').addEventListener('click', () => {
       reportModal.style.display = 'none';
+      limpiarPuntoTemporal();
     });
 
     document.getElementById('btnUseCurrentModal').addEventListener('click', () => {
@@ -719,6 +740,7 @@
         if (data.status === 'ok') {
           alert('¡Reporte publicado anónimamente con éxito!');
           reportModal.style.display = 'none';
+          limpiarPuntoTemporal();
           
           // Limpiar formulario y refrescar
           document.getElementById('modalDesc').value = '';
