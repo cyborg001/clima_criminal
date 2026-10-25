@@ -76,6 +76,9 @@
       <button id="btnGeo" class="btn-radar" title="Detectar mi ubicación en vivo">
         <span>🎯</span> Mi Ubicación
       </button>
+      <button id="btnExportPdf" class="btn-pdf" title="Descargar informe ejecutivo en PDF de los incidentes">
+        <span>📄</span> Informe PDF
+      </button>
       <button id="btnOpenModal" class="btn-report">
         <span>➕</span> Reportar Delito
       </button>
@@ -85,6 +88,11 @@
   <!-- Contenedor Principal: Mapa y Sidebar -->
   <main class="main-container">
     <div id="map"></div>
+
+    <!-- Botón Flotante en Mapa para Reporte Inmediato -->
+    <button id="btnFabReport" class="fab-report-btn">
+      <span>🚨</span> Reportar Delito Aquí
+    </button>
 
     <!-- Sidebar de Estadísticas y Reportes Recientes -->
     <aside class="sidebar" id="sidebarPanel">
@@ -553,13 +561,49 @@
 
     // Modal & Click en Mapa para seleccionar coordenadas
     const reportModal = document.getElementById('reportModal');
-    let isSelectingPoint = false;
+    let tempClickMarker = null;
+
+    // Función global para abrir modal con coordenadas específicas desde cualquier popup del mapa
+    window.abrirReporteEnPunto = function (lat, lon, sectorSugerido = null) {
+      state.selectedCoord = { lat, lon };
+      document.getElementById('coordDisplay').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      if (sectorSugerido) {
+        document.getElementById('modalSector').value = sectorSugerido;
+      }
+      if (tempClickMarker) {
+        map.removeLayer(tempClickMarker);
+        tempClickMarker = null;
+      }
+      reportModal.style.display = 'flex';
+    };
 
     document.getElementById('btnOpenModal').addEventListener('click', () => {
       reportModal.style.display = 'flex';
       if (!document.getElementById('coordDisplay').value) {
         document.getElementById('coordDisplay').value = `${state.selectedCoord.lat.toFixed(5)}, ${state.selectedCoord.lon.toFixed(5)}`;
       }
+    });
+
+    document.getElementById('btnFabReport').addEventListener('click', () => {
+      reportModal.style.display = 'flex';
+      if (!document.getElementById('coordDisplay').value) {
+        document.getElementById('coordDisplay').value = `${state.selectedCoord.lat.toFixed(5)}, ${state.selectedCoord.lon.toFixed(5)}`;
+      }
+    });
+
+    document.getElementById('btnExportPdf').addEventListener('click', () => {
+      const q = document.getElementById('searchInput').value;
+      const sector = document.getElementById('sectorFilter').value;
+      const tipo = document.getElementById('delitoFilter').value;
+      const franja = document.getElementById('franjaFilter').value;
+
+      const params = new URLSearchParams();
+      if (q) params.append('q', q);
+      if (sector) params.append('sector', sector);
+      if (tipo) params.append('tipo_delito', tipo);
+      if (franja) params.append('franja', franja);
+
+      window.open(`/api/reportes/exportar-pdf?${params.toString()}`, '_blank');
     });
 
     document.getElementById('btnCloseModal').addEventListener('click', () => {
@@ -574,10 +618,30 @@
       detectUserLocation(false);
     });
 
-    // Clic en el mapa para fijar punto de reporte
+    // Clic en el mapa para fijar punto de reporte y desplegar aviso interactivo
     map.on('click', (e) => {
-      state.selectedCoord = { lat: e.latlng.lat, lon: e.latlng.lng };
-      document.getElementById('coordDisplay').value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+      const lat = e.latlng.lat;
+      const lon = e.latlng.lng;
+      state.selectedCoord = { lat, lon };
+      document.getElementById('coordDisplay').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+      if (tempClickMarker) map.removeLayer(tempClickMarker);
+
+      const markerHtml = `<div style="width:16px; height:16px; background:#ef4444; border:3px solid white; border-radius:50%; box-shadow:0 0 12px rgba(239,68,68,1);"></div>`;
+      const tempIcon = L.divIcon({ html: markerHtml, className: '', iconSize: [16, 16], iconAnchor: [8, 8] });
+
+      tempClickMarker = L.marker([lat, lon], { icon: tempIcon }).addTo(map);
+
+      const popupContent = `
+        <div style="font-family:'Inter',sans-serif; text-align:center; min-width:170px; padding:3px;">
+          <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-bottom:2px;">📍 Punto Seleccionado</div>
+          <div style="font-size:0.78rem; font-weight:700; color:#0f172a; margin-bottom:8px;">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
+          <button onclick="window.abrirReporteEnPunto(${lat}, ${lon})" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none; padding:7px 12px; border-radius:6px; font-weight:700; font-size:0.78rem; cursor:pointer; width:100%; box-shadow:0 2px 8px rgba(239,68,68,0.4);">
+            🚨 Reportar Delito Aquí
+          </button>
+        </div>
+      `;
+      tempClickMarker.bindPopup(popupContent).openPopup();
     });
 
     // Toggle de Modo de Precisión

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi import FastAPI, Query, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +10,7 @@ from typing import Optional, List
 
 from .database import get_connection, init_db
 from .schemas import ReporteCreate
+from .pdf_generator import generar_boletin_pdf
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GEOJSON_PATH = os.path.join(BASE_DIR, "data", "sectores_gran_sd.geojson")
@@ -123,6 +124,31 @@ def get_reportes(
     conn.close()
     
     return [dict(row) for row in rows]
+
+@app.get("/api/reportes/exportar-pdf")
+def exportar_pdf(
+    sector: Optional[str] = None,
+    tipo_delito: Optional[str] = None,
+    franja: Optional[str] = None,
+    q: Optional[str] = None
+):
+    # 1. Obtener reportes filtrados
+    reportes = get_reportes(sector=sector, tipo_delito=tipo_delito, franja=franja, q=q)
+    
+    # 2. Obtener estadisticas generales
+    stats = get_estadisticas()
+    
+    # 3. Generar PDF binario con ReportLab
+    pdf_bytes = generar_boletin_pdf(reportes, stats, filtro_sector=sector or "Todos")
+    
+    fecha_str = datetime.now().strftime("%Y%m%d_%H%M")
+    filename = f"Boletin_Seguridad_SDE_{fecha_str}.pdf"
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 @app.post("/api/reportes/crear")
 def crear_reporte(payload: ReporteCreate):
