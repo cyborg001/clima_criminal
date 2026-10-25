@@ -689,8 +689,17 @@ body {
 .pin-vivienda { background: #ec4899; }
 .pin-otro { background: #06b6d4; }
 
-/* Controles de Navegación Móvil (Ocultos en Escritorio) */
-.mobile-nav-buttons {
+/* Header Inner Container */
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+}
+
+/* Controles de Navegación Móvil (Ocultos por defecto en Escritorio) */
+.mobile-actions-bar {
   display: none;
 }
 
@@ -704,24 +713,30 @@ body {
 
 @media (max-width: 992px) {
   .app-header {
-    height: 58px;
-    padding: 0 0.85rem;
+    height: 56px;
+    padding: 0 0.75rem;
     position: relative;
   }
 
   .brand-title {
-    font-size: 1.05rem;
+    font-size: 0.98rem;
+    font-weight: 700;
   }
 
   .brand-subtitle {
-    display: none;
+    display: none !important;
+  }
+
+  .brand-badge {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.35rem;
   }
 
   /* Ocultar barra horizontal fija de escritorio y reemplazar por drawer móvil */
   .filters-bar {
-    display: none;
+    display: none !important;
     position: absolute;
-    top: 58px;
+    top: 56px;
     left: 0;
     width: 100%;
     max-width: 100%;
@@ -732,8 +747,9 @@ body {
     border-bottom: 1px solid var(--border-card);
     flex-direction: column;
     gap: 0.6rem;
-    z-index: 1100;
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65);
+    z-index: 2100;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.75);
+    box-sizing: border-box;
     animation: slideDown 0.22s ease-out;
   }
 
@@ -743,7 +759,7 @@ body {
   }
 
   .filters-bar.mobile-open {
-    display: flex;
+    display: flex !important;
   }
 
   .search-box {
@@ -757,83 +773,100 @@ body {
 
   /* Ocultar botones desktop y mostrar iconos táctiles de cabecera */
   .action-buttons {
-    display: none;
+    display: none !important;
   }
 
-  .mobile-nav-buttons {
-    display: flex;
+  .mobile-actions-bar {
+    display: flex !important;
     align-items: center;
-    gap: 0.45rem;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
-  .btn-mobile-nav {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid var(--border-card);
+  .btn-mobile-action {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: white;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 9px;
-    font-size: 1.05rem;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+    padding: 0;
+    box-sizing: border-box;
   }
 
-  .btn-mobile-nav:active, .btn-mobile-nav.active {
+  .btn-mobile-action:active, .btn-mobile-action.active {
     background: var(--accent-blue);
     border-color: var(--accent-cyan);
-    transform: scale(0.95);
+    transform: scale(0.92);
   }
 
   .btn-radar-mobile {
-    background: rgba(2, 132, 199, 0.2);
+    background: rgba(2, 132, 199, 0.25);
     border-color: rgba(56, 189, 248, 0.5);
   }
 
-  /* Sidebar convertido en Bottom Sheet deslizable en Móviles */
+  .btn-report-mobile {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+  }
+
+  /* Sidebar convertido en Bottom Sheet deslizable en Móviles (OCULTO abajo por defecto) */
   .sidebar {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 72vh;
-    border-radius: 20px 20px 0 0;
-    transform: translateY(105%);
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 1500;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.75);
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 72vh !important;
+    max-height: 72vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    transform: translateY(110%) !important;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    z-index: 3000 !important;
+    background: rgba(15, 23, 42, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.85) !important;
+    margin: 0 !important;
   }
 
   .sidebar.mobile-open {
-    transform: translateY(0);
+    transform: translateY(0) !important;
   }
 
   .mobile-close-sidebar {
     display: block;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--border-card);
     color: white;
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     line-height: 1;
     cursor: pointer;
   }
 
   /* Botón Flotante de Reporte en Celulares */
   .fab-report-btn {
-    bottom: 16px;
-    width: calc(100% - 2rem);
-    max-width: 310px;
-    padding: 0.7rem 1rem;
-    font-size: 0.82rem;
-    justify-content: center;
+    bottom: 16px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    max-width: 90% !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
+    justify-content: center !important;
+    z-index: 1000 !important;
   }
 }
 

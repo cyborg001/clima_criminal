@@ -11,85 +11,85 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=20261025_05">
 </head>
 <body>
 
   <!-- App Header & Filtros Rápidos -->
   <header class="app-header">
-    <div class="brand-section">
-      <div class="brand-badge">SDE</div>
-      <div>
-        <h1 class="brand-title">Clima Criminal</h1>
-        <p class="brand-subtitle">Mapa Térmico y Reporte Anónimo</p>
-      </div>
-    </div>
-
-    <!-- Botones de Control para Móviles (Visibles solo en pantallas pequeñas) -->
-    <div class="mobile-nav-buttons">
-      <button id="btnToggleFilters" class="btn-mobile-nav" title="Filtrar">🔍</button>
-      <button id="btnToggleSidebar" class="btn-mobile-nav" title="Estadísticas y Feed">📊</button>
-      <button id="btnExportPdfMobile" class="btn-mobile-nav" title="Descargar PDF">📄</button>
-      <button id="btnGeoMobile" class="btn-mobile-nav btn-radar-mobile" title="GPS">🎯</button>
-    </div>
-
-    <!-- Barra de Filtros y Búsqueda Libre -->
-    <div class="filters-bar" id="filtersBar">
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Buscar palabras clave (ej: 'cizalla', 'pasola', 'Corolla', 'pistola')...">
+    <div class="header-inner">
+      <div class="brand-section">
+        <span class="brand-badge">SDE</span>
+        <span class="brand-title">Clima Criminal</span>
       </div>
 
-      <select id="sectorFilter" class="filter-select">
-        <option value="Todos">📍 Todos los Sectores</option>
-        <option value="Los Mina">Los Mina</option>
-        <option value="Ensanche Ozama">Ensanche Ozama</option>
-        <option value="Alma Rosa I">Alma Rosa I</option>
-        <option value="Alma Rosa II">Alma Rosa II</option>
-        <option value="Villa Duarte / Maquiteria">Villa Duarte</option>
-        <option value="Los Mameyes / Ens. Isabelita">Los Mameyes / Isabelita</option>
-        <option value="Invivienda">Invivienda</option>
-        <option value="Villa Faro">Villa Faro</option>
-        <option value="Mendoza / Ralma">Mendoza / Ralma</option>
-        <option value="Cancino / Lucerna / Charles">Cancino / Charles</option>
-        <option value="Los Frailes (I y II)">Los Frailes</option>
-        <option value="Hainamosa / El Tamarindo">Hainamosa</option>
-        <option value="El Almirante">El Almirante</option>
-        <option value="San Isidro / El Bonito">San Isidro</option>
-        <option value="Ciudad Colonial / Gazcue">Ciudad Colonial (DN)</option>
-        <option value="Cristo Rey / Capotillo">Cristo Rey (DN)</option>
-      </select>
+      <!-- Barra de Acciones Móvil (Solo visible en pantallas táctiles/celulares) -->
+      <div class="mobile-actions-bar">
+        <button id="btnToggleFilters" class="btn-mobile-action" title="Filtros y Búsqueda">🔍</button>
+        <button id="btnToggleSidebar" class="btn-mobile-action" title="Termómetro de Incidentes">📊</button>
+        <button id="btnExportPdfMobile" class="btn-mobile-action" title="Descargar PDF">📄</button>
+        <button id="btnGeoMobile" class="btn-mobile-action btn-radar-mobile" title="Mi Ubicación">🎯</button>
+        <button id="btnOpenModalMobile" class="btn-mobile-action btn-report-mobile" title="Reportar Delito">➕</button>
+      </div>
 
-      <select id="delitoFilter" class="filter-select">
-        <option value="Todos">🚨 Todos los Delitos</option>
-        <option value="Atraco a mano armada">🔫 Atraco armado</option>
-        <option value="Despojo en motocicleta">🏍️ Despojo en moto</option>
-        <option value="Robo de vehículo/accesorios">🚗 Robo de vehículo</option>
-        <option value="Robo a vivienda/negocio">🏠 Robo vivienda/negocio</option>
-        <option value="Hurto simple">👜 Hurto simple</option>
-        <option value="Otro">⚠️ Otro / Especial</option>
-      </select>
+      <!-- Barra de Filtros y Búsqueda Libre (Horizontal en Desktop, Desplegable en Móvil) -->
+      <div class="filters-bar" id="filtersBar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Buscar palabras clave (ej: 'cizalla', 'pasola', 'Corolla')...">
+        </div>
 
-      <select id="franjaFilter" class="filter-select">
-        <option value="Todas">⏰ Todos los Horarios</option>
-        <option value="Mañana">🌅 Mañana (6am-12pm)</option>
-        <option value="Tarde">☀️ Tarde (12pm-6pm)</option>
-        <option value="Noche">🌙 Noche (6pm-12am)</option>
-        <option value="Madrugada">🦉 Madrugada (12am-6am)</option>
-      </select>
-    </div>
+        <select id="sectorFilter" class="filter-select">
+          <option value="Todos">📍 Todos los Sectores</option>
+          <option value="Los Mina">Los Mina</option>
+          <option value="Ensanche Ozama">Ensanche Ozama</option>
+          <option value="Alma Rosa I">Alma Rosa I</option>
+          <option value="Alma Rosa II">Alma Rosa II</option>
+          <option value="Villa Duarte / Maquiteria">Villa Duarte</option>
+          <option value="Los Mameyes / Ens. Isabelita">Los Mameyes / Isabelita</option>
+          <option value="Invivienda">Invivienda</option>
+          <option value="Villa Faro">Villa Faro</option>
+          <option value="Mendoza / Ralma">Mendoza / Ralma</option>
+          <option value="Cancino / Lucerna / Charles">Cancino / Charles</option>
+          <option value="Los Frailes (I y II)">Los Frailes</option>
+          <option value="Hainamosa / El Tamarindo">Hainamosa</option>
+          <option value="El Almirante">El Almirante</option>
+          <option value="San Isidro / El Bonito">San Isidro</option>
+          <option value="Ciudad Colonial / Gazcue">Ciudad Colonial (DN)</option>
+          <option value="Cristo Rey / Capotillo">Cristo Rey (DN)</option>
+        </select>
 
-    <!-- Botones de Acción -->
-    <div class="action-buttons">
-      <button id="btnGeo" class="btn-radar" title="Detectar mi ubicación en vivo">
-        <span>🎯</span> Mi Ubicación
-      </button>
-      <button id="btnExportPdf" class="btn-pdf" title="Descargar informe ejecutivo en PDF de los incidentes">
-        <span>📄</span> Informe PDF
-      </button>
-      <button id="btnOpenModal" class="btn-report">
-        <span>➕</span> Reportar Delito
-      </button>
+        <select id="delitoFilter" class="filter-select">
+          <option value="Todos">🚨 Todos los Delitos</option>
+          <option value="Atraco a mano armada">🔫 Atraco armado</option>
+          <option value="Despojo en motocicleta">🏍️ Despojo en moto</option>
+          <option value="Robo de vehículo/accesorios">🚗 Robo de vehículo</option>
+          <option value="Robo a vivienda/negocio">🏠 Robo vivienda/negocio</option>
+          <option value="Hurto simple">👜 Hurto simple</option>
+          <option value="Otro">⚠️ Otro / Especial</option>
+        </select>
+
+        <select id="franjaFilter" class="filter-select">
+          <option value="Todas">⏰ Todos los Horarios</option>
+          <option value="Mañana">🌅 Mañana (6am-12pm)</option>
+          <option value="Tarde">☀️ Tarde (12pm-6pm)</option>
+          <option value="Noche">🌙 Noche (6pm-12am)</option>
+          <option value="Madrugada">🦉 Madrugada (12am-6am)</option>
+        </select>
+      </div>
+
+      <!-- Botones de Acción Desktop -->
+      <div class="action-buttons">
+        <button id="btnGeo" class="btn-radar" title="Detectar mi ubicación en vivo">
+          <span>🎯</span> Mi Ubicación
+        </button>
+        <button id="btnExportPdf" class="btn-pdf" title="Descargar informe ejecutivo en PDF de los incidentes">
+          <span>📄</span> Informe PDF
+        </button>
+        <button id="btnOpenModal" class="btn-report">
+          <span>➕</span> Reportar Delito
+        </button>
+      </div>
     </div>
   </header>
 
@@ -878,6 +878,13 @@
     if (btnGeoMobile) {
       btnGeoMobile.addEventListener('click', () => {
         detectUserLocation(true);
+      });
+    }
+
+    const btnOpenModalMobile = document.getElementById('btnOpenModalMobile');
+    if (btnOpenModalMobile) {
+      btnOpenModalMobile.addEventListener('click', () => {
+        document.getElementById('btnOpenModal').click();
       });
     }
 
