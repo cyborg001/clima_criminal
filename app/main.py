@@ -39,7 +39,7 @@ def startup_event():
 
 @app.get("/")
 def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="index.html")
 
 @app.get("/api/sectores")
 def get_sectores():
