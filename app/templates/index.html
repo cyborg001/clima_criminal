@@ -248,12 +248,27 @@
 
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-    // Tiles oscuros profesionales (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 19
+    // Capas de Mapa Base sin API Key (Esri Dark Canvas + Referencias de Calles)
+    const darkBase = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; Esri, DeLorme, NAVTEQ',
+      maxZoom: 18
     }).addTo(map);
+
+    const darkLabels = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '',
+      maxZoom: 18
+    }).addTo(map);
+
+    const osmBase = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    });
+
+    // Control de cambio de mapa base (Oscuro / Estándar)
+    L.control.layers({
+      "🌙 Modo Oscuro (Esri Dark)": darkBase,
+      "☀️ Modo Calles (OpenStreetMap)": osmBase
+    }, null, { position: 'bottomright' }).addTo(map);
 
     // Grupos de capas
     let geojsonLayer = null;
