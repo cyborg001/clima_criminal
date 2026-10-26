@@ -603,6 +603,27 @@ body {
   outline: none;
 }
 
+/* Reglas universales de contraste para listas desplegables (select y option) en PC y móviles */
+select, select.form-input {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+select option,
+select.form-input option,
+.form-input option,
+.filter-select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  padding: 8px 10px;
+}
+
+select option:hover,
+select option:checked {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
 .form-input:focus, .form-textarea:focus, .form-select-modal:focus {
   border-color: var(--accent-cyan);
 }
