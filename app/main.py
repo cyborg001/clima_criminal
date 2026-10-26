@@ -16,6 +16,20 @@ from .pdf_generator import generar_boletin_pdf
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GEOJSON_PATH = os.path.join(BASE_DIR, "data", "sectores_gran_sd.geojson")
 
+# Cargar centroides de sectores para coherencia territorial
+SECTORES_CENTROIDES = {}
+if os.path.exists(GEOJSON_PATH):
+    try:
+        with open(GEOJSON_PATH, "r", encoding="utf-8") as _f:
+            _geo = json.load(_f)
+            for _feat in _geo.get("features", []):
+                _nom = _feat.get("properties", {}).get("nombre")
+                _cent = _feat.get("properties", {}).get("centroide")
+                if _nom and _cent and len(_cent) == 2:
+                    SECTORES_CENTROIDES[_nom] = _cent
+    except Exception as _e:
+        print(f"Error cargando centroides: {_e}")
+
 app = FastAPI(title="Clima Criminal - Gran Santo Domingo", version="1.0.0")
 
 app.add_middleware(
@@ -179,6 +193,15 @@ def crear_reporte(payload: ReporteCreate):
     
     lat = payload.latitud
     lon = payload.longitud
+    
+    # Salvaguarda de coherencia territorial:
+    # Si el sector declarado pertenece al catálogo de SDE pero la coordenada está desfasada a más de ~4.5 km:
+    if payload.sector in SECTORES_CENTROIDES:
+        c_lat, c_lon = SECTORES_CENTROIDES[payload.sector]
+        dist_deg = ((lat - c_lat)**2 + (lon - c_lon)**2) ** 0.5
+        if dist_deg > 0.04:  # Desfase excesivo con respecto al sector elegido
+            lat = c_lat + random.uniform(-0.0015, 0.0015)
+            lon = c_lon + random.uniform(-0.0015, 0.0015)
     
     # Protección de privacidad espacial si el usuario eligió modo protegido
     if payload.modo_ubicacion == "protegida":

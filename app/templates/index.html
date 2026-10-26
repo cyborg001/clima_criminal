@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
-  <link rel="stylesheet" href="/static/style.css?v=20261025_09">
+  <link rel="stylesheet" href="/static/style.css?v=20261025_10">
 </head>
 <body>
 
@@ -194,6 +194,9 @@
             <button type="button" id="btnUseCurrentModal" class="btn-radar" style="white-space:nowrap;">📍 Aquí</button>
           </div>
           <span style="font-size:0.72rem; color:var(--text-muted);">Puedes cerrar este diálogo temporalmente y tocar en el mapa la calle del hecho.</span>
+          <div id="sectorReubicadoNotice" style="display:none; font-size:0.75rem; color:#34d399; font-weight:600; margin-top:4px; padding:4px 8px; background:rgba(16,185,129,0.15); border-radius:6px; border:1px solid rgba(16,185,129,0.3);">
+            📍 Coordenadas reubicadas al sector seleccionado
+          </div>
         </div>
 
         <!-- Sector y Referencia Pública -->
@@ -207,14 +210,19 @@
               <option value="Alma Rosa II">Alma Rosa II</option>
               <option value="Villa Duarte / Maquiteria">Villa Duarte / Maquiteria</option>
               <option value="Los Mameyes / Ens. Isabelita">Los Mameyes / Isabelita</option>
-              <option value="Invivienda">Invivienda</option>
+              <option value="Los Tres Ojos">Los Tres Ojos</option>
               <option value="Villa Faro">Villa Faro</option>
               <option value="Mendoza / Ralma">Mendoza / Ralma</option>
+              <option value="Invivienda">Invivienda</option>
+              <option value="Hainamosa / El Tamarindo">Hainamosa / El Tamarindo</option>
+              <option value="El Almirante">El Almirante</option>
               <option value="Cancino / Lucerna / Charles">Cancino / Charles</option>
               <option value="Los Frailes (I y II)">Los Frailes</option>
-              <option value="Hainamosa / El Tamarindo">Hainamosa</option>
-              <option value="El Almirante">El Almirante</option>
-              <option value="San Isidro / El Bonito">San Isidro</option>
+              <option value="Brisas del Este">Brisas del Este</option>
+              <option value="San Isidro / El Bonito">San Isidro / El Bonito</option>
+              <option value="Ciudad Colonial / Gazcue">Ciudad Colonial / Gazcue (DN)</option>
+              <option value="Cristo Rey / Capotillo">Cristo Rey / Capotillo (DN)</option>
+              <option value="Piantini / Naco / Bella Vista">Piantini / Naco / Bella Vista (DN)</option>
               <option value="Otro Sector Gran SD">Otro Sector Gran SD</option>
             </select>
           </div>
@@ -612,22 +620,171 @@
       }
     });
 
+    // ==========================================
+    // Inteligencia Espacial: Detección y Reubicación Territorial
+    // ==========================================
+    function isPointInPoly(lat, lon, vs) {
+      let inside = false;
+      for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        const xi = vs[i][0], yi = vs[i][1]; // GeoJSON: [lon, lat]
+        const xj = vs[j][0], yj = vs[j][1];
+        const intersect = ((yi > lat) !== (yj > lat))
+            && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function detectarSectorPorCoordenada(lat, lon) {
+      if (!state.sectoresGeoJSON || !state.sectoresGeoJSON.features) {
+        return null;
+      }
+
+      // 1. Pertenencia geométrica exacta en polígonos
+      for (const feature of state.sectoresGeoJSON.features) {
+        const geom = feature.geometry;
+        if (!geom) continue;
+        const nombre = feature.properties.nombre;
+
+        if (geom.type === 'Polygon') {
+          for (const ring of geom.coordinates) {
+            if (isPointInPoly(lat, lon, ring)) {
+              return nombre;
+            }
+          }
+        } else if (geom.type === 'MultiPolygon') {
+          for (const poly of geom.coordinates) {
+            for (const ring of poly) {
+              if (isPointInPoly(lat, lon, ring)) {
+                return nombre;
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Proximidad por centroide si cae en borde o límite inmediato
+      let mejorSector = null;
+      let menorDistancia = Infinity;
+
+      for (const feature of state.sectoresGeoJSON.features) {
+        const centroide = feature.properties.centroide;
+        if (centroide && centroide.length === 2) {
+          const cLat = centroide[0];
+          const cLon = centroide[1];
+          const d2 = Math.pow(cLat - lat, 2) + Math.pow(cLon - lon, 2);
+          if (d2 < menorDistancia) {
+            menorDistancia = d2;
+            mejorSector = feature.properties.nombre;
+          }
+        }
+      }
+
+      if (Math.sqrt(menorDistancia) < 0.08) {
+        return mejorSector;
+      }
+
+      return "Otro Sector Gran SD";
+    }
+
+    function obtenerCentroideSector(nombreSector) {
+      if (!state.sectoresGeoJSON || !state.sectoresGeoJSON.features) {
+        return null;
+      }
+      for (const feature of state.sectoresGeoJSON.features) {
+        if (feature.properties.nombre === nombreSector) {
+          return feature.properties.centroide;
+        }
+      }
+      return null;
+    }
+
+    function reubicarCoordenadaPorSector(nombreSector) {
+      const centroide = obtenerCentroideSector(nombreSector);
+      if (!centroide) return;
+
+      // Dispersión sutil de ~100 metros alrededor del centroide para realismo
+      const jitterLat = (Math.random() - 0.5) * 0.002;
+      const jitterLon = (Math.random() - 0.5) * 0.002;
+      const nuevoLat = centroide[0] + jitterLat;
+      const nuevoLon = centroide[1] + jitterLon;
+
+      state.selectedCoord = { lat: nuevoLat, lon: nuevoLon };
+      const coordInput = document.getElementById('coordDisplay');
+      if (coordInput) {
+        coordInput.value = `${nuevoLat.toFixed(5)}, ${nuevoLon.toFixed(5)}`;
+      }
+
+      // Mover el pin temporal en el mapa
+      if (tempClickMarker) {
+        tempClickMarker.setLatLng([nuevoLat, nuevoLon]);
+      } else {
+        const markerHtml = `<div style="width:16px; height:16px; background:#ef4444; border:3px solid white; border-radius:50%; box-shadow:0 0 12px rgba(239,68,68,1);"></div>`;
+        const tempIcon = L.divIcon({ html: markerHtml, className: '', iconSize: [16, 16], iconAnchor: [8, 8] });
+        tempClickMarker = L.marker([nuevoLat, nuevoLon], { icon: tempIcon }).addTo(map);
+      }
+
+      // Centrar el mapa suavemente en el sector seleccionado
+      map.panTo([nuevoLat, nuevoLon]);
+
+      // Mostrar feedback visual informativo en el modal
+      const noticeElem = document.getElementById('sectorReubicadoNotice');
+      if (noticeElem) {
+        noticeElem.textContent = `📍 Coordenadas reubicadas al sector: ${nombreSector}`;
+        noticeElem.style.display = 'block';
+        setTimeout(() => {
+          if (noticeElem) noticeElem.style.display = 'none';
+        }, 4000);
+      }
+    }
+
     // Función global para abrir modal con coordenadas específicas desde cualquier popup del mapa
     window.abrirReporteEnPunto = function (lat, lon, sectorSugerido = null) {
       state.selectedCoord = { lat, lon };
       document.getElementById('coordDisplay').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-      if (sectorSugerido) {
-        document.getElementById('modalSector').value = sectorSugerido;
+      
+      const sector = sectorSugerido || detectarSectorPorCoordenada(lat, lon);
+      if (sector) {
+        const selectElem = document.getElementById('modalSector');
+        if (selectElem) {
+          selectElem.value = sector;
+          if (!selectElem.value) {
+            for (let opt of selectElem.options) {
+              if (opt.value.toLowerCase().includes(sector.toLowerCase()) || sector.toLowerCase().includes(opt.value.toLowerCase())) {
+                selectElem.value = opt.value;
+                break;
+              }
+            }
+          }
+        }
       }
+
+      const noticeElem = document.getElementById('sectorReubicadoNotice');
+      if (noticeElem) noticeElem.style.display = 'none';
+
       reportModal.style.display = 'flex';
     };
 
     document.getElementById('btnOpenModal').addEventListener('click', () => {
-      reportModal.style.display = 'flex';
-      if (!document.getElementById('coordDisplay').value) {
-        document.getElementById('coordDisplay').value = `${state.selectedCoord.lat.toFixed(5)}, ${state.selectedCoord.lon.toFixed(5)}`;
-      }
+      const lat = state.selectedCoord.lat || DEFAULT_LAT;
+      const lon = state.selectedCoord.lon || DEFAULT_LON;
+      window.abrirReporteEnPunto(lat, lon);
     });
+
+    // Listener para cuando el usuario cambia manualmente el sector en el selector
+    const modalSectorSelect = document.getElementById('modalSector');
+    if (modalSectorSelect) {
+      modalSectorSelect.addEventListener('change', () => {
+        const sectorElegido = modalSectorSelect.value;
+        if (sectorElegido && sectorElegido !== 'Otro Sector Gran SD') {
+          // Si las coordenadas actuales no corresponden a este sector, reubicar automáticamente
+          const sectorActual = detectarSectorPorCoordenada(state.selectedCoord.lat, state.selectedCoord.lon);
+          if (sectorActual !== sectorElegido) {
+            reubicarCoordenadaPorSector(sectorElegido);
+          }
+        }
+      });
+    }
 
     // Botón Flotante: Reportar en la Ubicación GPS en Vivo en ese mismo instante
     document.getElementById('btnFabReport').addEventListener('click', () => {
@@ -647,18 +804,24 @@
             
             // Actualizar radar y volar a su ubicación
             detectUserLocation(true);
-            window.abrirReporteEnPunto(lat, lon);
+            const sector = detectarSectorPorCoordenada(lat, lon);
+            window.abrirReporteEnPunto(lat, lon, sector);
           },
           (err) => {
             fabBtn.innerHTML = originalHtml;
             console.warn("GPS no disponible:", err.message);
-            // Fallback con la coordenada que tengamos disponible
-            window.abrirReporteEnPunto(state.currentLat || DEFAULT_LAT, state.currentLon || DEFAULT_LON);
+            const lat = state.currentLat || DEFAULT_LAT;
+            const lon = state.currentLon || DEFAULT_LON;
+            const sector = detectarSectorPorCoordenada(lat, lon);
+            window.abrirReporteEnPunto(lat, lon, sector);
           },
           { enableHighAccuracy: true, timeout: 8000 }
         );
       } else {
-        window.abrirReporteEnPunto(state.currentLat || DEFAULT_LAT, state.currentLon || DEFAULT_LON);
+        const lat = state.currentLat || DEFAULT_LAT;
+        const lon = state.currentLon || DEFAULT_LON;
+        const sector = detectarSectorPorCoordenada(lat, lon);
+        window.abrirReporteEnPunto(lat, lon, sector);
       }
     });
 
@@ -689,6 +852,13 @@
 
     document.getElementById('btnUseCurrentModal').addEventListener('click', () => {
       detectUserLocation(false);
+      setTimeout(() => {
+        const sector = detectarSectorPorCoordenada(state.selectedCoord.lat, state.selectedCoord.lon);
+        if (sector) {
+          const selectElem = document.getElementById('modalSector');
+          if (selectElem) selectElem.value = sector;
+        }
+      }, 500);
     });
 
     // Clic en el mapa para fijar punto de reporte y desplegar aviso interactivo
@@ -697,6 +867,8 @@
       const lon = e.latlng.lng;
       state.selectedCoord = { lat, lon };
       document.getElementById('coordDisplay').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+      const sectorDetectado = detectarSectorPorCoordenada(lat, lon) || 'Sector no identificado';
 
       if (tempClickMarker) map.removeLayer(tempClickMarker);
 
@@ -709,20 +881,21 @@
       const popupDiv = document.createElement('div');
       popupDiv.style.fontFamily = "'Inter', sans-serif";
       popupDiv.style.textAlign = "center";
-      popupDiv.style.minWidth = "170px";
-      popupDiv.style.padding = "3px";
+      popupDiv.style.minWidth = "180px";
+      popupDiv.style.padding = "4px";
 
       popupDiv.innerHTML = `
         <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-bottom:2px;">📍 Punto Seleccionado</div>
-        <div style="font-size:0.78rem; font-weight:700; color:#0f172a; margin-bottom:8px;">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
+        <div style="font-size:0.85rem; font-weight:700; color:#0f172a; margin-bottom:2px;">${sectorDetectado}</div>
+        <div style="font-size:0.72rem; color:#64748b; margin-bottom:8px;">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
         <button id="btnPopupReportar" style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none; padding:7px 12px; border-radius:6px; font-weight:700; font-size:0.78rem; cursor:pointer; width:100%; box-shadow:0 2px 8px rgba(239,68,68,0.4);">
-          📍 Reportar en Este Punto Marcado
+          📍 Reportar en Este Punto
         </button>
       `;
 
       const btnReportar = popupDiv.querySelector('#btnPopupReportar');
       btnReportar.addEventListener('click', () => {
-        window.abrirReporteEnPunto(lat, lon);
+        window.abrirReporteEnPunto(lat, lon, sectorDetectado);
       });
 
       tempClickMarker.bindPopup(popupDiv).openPopup();
